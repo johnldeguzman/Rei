@@ -1,0 +1,72 @@
+---
+description: Detects when content naturally warrants multi-perspective review and activates the agent team skill
+alwaysApply: true
+---
+
+# Agent Team — Natural Trigger Detection
+
+Determines when to activate the agent team for multi-perspective review, without requiring an explicit trigger phrase.
+
+**SKILL LOCATION**: `.cursor/skills/agent-team/SKILL.md` — read this skill before executing.
+
+## Auto-Activate (High Confidence)
+
+Run the agent team automatically when the user:
+
+1. **Shares a PRD, RFC, or technical proposal for review** — phrases like "review this PRD", "look at this RFC", "what do you think about this proposal", or shares/links a document that is clearly a PRD, RFC, or design doc
+2. **Asks for launch readiness assessment** — "is this ready to launch?", "launch checklist", "go/no-go", "readiness check", "pre-launch review"
+3. **Shares an architecture or design document for evaluation** — "evaluate this architecture", "review this design", or shares a doc containing system architecture decisions
+
+When auto-activating:
+- Tell the user: "This [PRD/architecture/proposal] touches [relevant domains]. Running it through [selected specialists] for a multi-perspective review."
+- Proceed with the agent team skill workflow immediately
+
+## Suggest (Medium Confidence)
+
+Suggest a team review — but don't auto-activate — when:
+
+1. **Complex project planning** — the topic involves multiple systems, cross-cutting concerns, or significant risk, but the user hasn't explicitly asked for a review
+2. **Vendor or tool evaluation** — the user is evaluating a third-party tool or service and discussing trade-offs
+3. **Risk assessment discussions** — conversation surfaces multiple risk dimensions (security + operational + technical)
+4. **Post-mortem or incident analysis** — investigating a complex incident with multiple potential root causes
+
+When suggesting:
+- "This looks like it could benefit from a team review — want me to run [relevant specialists] perspectives on it?"
+- Respect the answer. If the user says no, drop it and proceed normally.
+
+## Do NOT Trigger
+
+Never activate or suggest the agent team for:
+
+- Simple status updates or weekly operations (start week, end week, timeline sync)
+- Single-domain questions ("how does OAuth work?", "what's a good caching strategy?")
+- File edits, task completion, or small changes
+- Casual conversation or quick questions
+- Work that's purely operational (Jira updates, Confluence syncs, weekly tracking)
+- When the user explicitly says they just want a quick take or doesn't need a deep review
+- Simple bug fixes or code changes that don't involve architectural decisions
+
+## Specialist Selection
+
+When triggered, select specialists based on content type:
+
+| Content Type | Specialists |
+|---|---|
+| PRD / Product Spec | Security + Engineering + Ops |
+| Architecture / Design Doc | Engineering + Security |
+| Launch Readiness | Ops + Security + Engineering |
+| Vendor / Tool Evaluation | Security + Engineering |
+| API Design | Security + Engineering |
+| Incident / Post-mortem | Engineering + Ops |
+| Infrastructure Change | Ops + Security |
+
+Default to all three if the content spans multiple categories or if unsure.
+
+## User Override
+
+The user can always:
+- **Add specialists**: "also run ops on this"
+- **Remove specialists**: "skip the ops review, just security and engineering"
+- **Skip entirely**: "just give me your take" or "skip the team review"
+- **Request manually**: "run a team review on this" (activates even if trigger conditions aren't met)
+- **Adjust scope**: "just a quick team review, not the full thing" — run Round 1 only, skip Round 2 consideration

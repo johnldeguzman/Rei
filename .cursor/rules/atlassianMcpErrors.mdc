@@ -1,0 +1,142 @@
+---
+alwaysApply: true
+---
+
+# Atlassian/MCP Error Handling
+
+Handles ALL errors from Atlassian API and MCP tool calls by prompting the user to re-authenticate.
+
+**TRIGGER**: When ANY error occurs from an Atlassian or MCP tool call — regardless of error type.
+
+**How to identify Atlassian/MCP errors**: The error occurs during a call to any tool prefixed with `AtlassianRemoteMCPServer-` (e.g., `getJiraIssue`, `searchJiraIssuesUsingJql`, `getConfluencePage`, `createConfluencePage`, etc.)
+
+## Step 1: Display Re-Authentication Message (MANDATORY for ALL errors)
+
+For **ANY** error from an Atlassian/MCP tool — whether it's 401, 403, 404, 500, 429, timeout, or anything else — display this message exactly:
+
+```
+⚠️ AUTHENTICATION ERROR DETECTED ⚠️
+
+THE ATLASSIAN/MCP TOOL AUTHENTICATION HAS EXPIRED OR FAILED.
+
+PLEASE FOLLOW THESE STEPS:
+1. TOGGLE THE ATLASSIAN/MCP TOOL OFF AND THEN BACK ON TO RE-ENABLE AUTHENTICATION
+2. WAIT FOR AUTHENTICATION TO COMPLETE
+3. LET ME KNOW WHEN YOU ARE READY TO TRY AGAIN
+
+ONCE YOU'VE TOGGLED THE TOOL AND RE-AUTHENTICATED, TYPE "ready" OR "try again" AND I WILL RETRY THE OPERATION.
+```
+
+- **DO NOT** automatically retry — wait for user confirmation ("ready", "try again", "retry")
+- **DO NOT** proceed with other operations until user confirms
+- After confirmation, retry the original operation **once**
+
+## Step 2: Handle Failure After Retry (max 1 retry via MCP)
+
+If the operation **still fails** after the user re-authenticates and you retry once:
+
+1. **DO NOT** show the re-auth message again
+2. **DO NOT** retry via MCP again — the max MCP retry limit is 1
+3. Inform the user the MCP path failed and that you're falling back to CLI
+
+## Step 3: CLI Fallback (MANDATORY before manual checklist)
+
+Before falling back to a manual checklist, attempt the operation via terminal. I have shell access and can use `curl` (always available) or `acli` (if installed) to interact with the Atlassian REST API directly.
+
+### Credential discovery (shared by both fallback methods)
+
+Before attempting any CLI fallback, resolve credentials in this order:
+1. Environment variables: `ATLASSIAN_API_TOKEN` and `ATLASSIAN_EMAIL`
+2. Config file: `~/.atlassian-credentials` (format: `email` on line 1, `token` on line 2)
+3. If no credentials found, ask: "MCP is down. I can try via REST API — do you have an Atlassian API token I can use? (I'll use it for this session only)"
+4. If the user declines or has no token, skip to Step 4 (manual checklist)
+
+### Fallback chain (try in order)
+
+1. **`acli`** (Atlassian CLI) — check if available (`which acli`). If **not installed**: on macOS/Linux, install via `brew tap atlassian/homebrew-acli && brew install acli`. On Windows, skip `acli` and go directly to `curl`. Detect platform with `uname -s` or check for `brew` availability before attempting install. Tell the user: "Installing Atlassian CLI as a fallback..." — do not ask for permission, just install it. `acli` supports Jira and Confluence operations natively and uses the same API token auth.
+2. **`curl` to Atlassian REST API** — if `acli` install fails or the specific `acli` command fails, fall back to raw `curl` calls. Always available, no install needed.
+3. **Manual checklist** — if both CLI methods fail or no credentials are available, proceed to Step 4
+
+### CLI operation mapping (curl)
+
+All requests use: `curl -u {email}:{api_token} -H "Content-Type: application/json"`
+
+**Site**: Use the Atlassian Site value from `shared/config.md`
+
+#### Jira (REST API v3)
+
+| MCP Operation | Method | Endpoint |
+|---|---|---|
+| `getJiraIssue` | `GET` | `/rest/api/3/issue/{key}?fields={fields}` |
+| `searchJiraIssuesUsingJql` | `GET` | `/rest/api/3/search/jql?jql={url-encoded-jql}&maxResults={n}` |
+| `editJiraIssue` | `PUT` | `/rest/api/3/issue/{key}` |
+| `transitionJiraIssue` | `POST` | `/rest/api/3/issue/{key}/transitions` |
+| `getTransitionsForJiraIssue` | `GET` | `/rest/api/3/issue/{key}/transitions` |
+| `addCommentToJiraIssue` | `POST` | `/rest/api/3/issue/{key}/comment` |
+
+**Base URL**: `https://{ATLASSIAN_SITE}/rest/api/3` (resolve from `shared/config.md`)
+
+**Note on search**: The legacy `/rest/api/3/search` endpoint has been removed. Always use `/rest/api/3/search/jql`. JQL must be URL-encoded. Pagination uses `nextPageToken`, not `startAt`.
+
+#### Confluence (REST API v2)
+
+| MCP Operation | Method | Endpoint |
+|---|---|---|
+| `getConfluencePage` | `GET` | `/wiki/api/v2/pages/{id}?body-format=atlas_doc_format` |
+| `updateConfluencePage` | `PUT` | `/wiki/api/v2/pages/{id}` |
+| `createConfluencePage` | `POST` | `/wiki/api/v2/pages` |
+| `getConfluencePageDescendants` | `GET` | `/wiki/api/v2/pages/{id}/children` |
+
+**Base URL**: `https://{ATLASSIAN_SITE}/wiki/api/v2` (resolve from `shared/config.md`)
+
+### Rules
+
+- **Tell the user what's happening** — "MCP failed, trying via CLI..." (don't silently switch)
+- **Same operation, different transport** — the CLI fallback should attempt the exact same operation that the MCP call was trying to perform
+- **If CLI succeeds, continue normally** — no need for manual checklist for that operation
+- **If CLI also fails, proceed to Step 4** — capture the pending work
+
+## Step 4: Graceful Degradation — Capture Pending Work (MANDATORY for write failures)
+
+When a **write operation** fails via both MCP and CLI fallback, **do not discard the intended changes**. Capture them so the user can apply them manually.
+
+### What to capture
+
+For each failed write operation, record:
+- **Target**: The Jira ticket key, Confluence page ID, or resource that was being updated
+- **Operation**: What was being done (e.g., "transition to In Progress", "update Target End to Mar 15", "sync page content")
+- **Payload**: The specific values that would have been written (field values, comment text, page body summary)
+- **Reason**: Why it matters (e.g., "child tickets show active work, project status is stale")
+
+### How to present
+
+After all operations in the current skill/workflow have been attempted, present a **Manual Follow-Up Checklist** with the captured items:
+
+```markdown
+### Manual Follow-Up Checklist
+
+The following Jira/Confluence updates could not be applied automatically. Apply them manually when access is restored:
+
+- [ ] **[TICKET-KEY]** — Transition to "In Progress" (reason: 3 of 5 children are active)
+- [ ] **[TICKET-KEY]** — Set Target End to 2026-03-15 (was: empty)
+- [ ] **Confluence page [ID]** — Sync all-projects.md content (last synced: Feb 14)
+```
+
+### Rules
+
+- **Always continue the workflow** — failed writes should not block read-only steps (summaries, reports, file writes)
+- **Accumulate failures** — if multiple writes fail, collect them all and present one checklist at the end (not one per failure)
+- **Local file writes are unaffected** — if Jira/Confluence is down, still write to local files (`all-projects.md`, weekly updates, `project-timeline.md`)
+- **Reference the checklist in the run output** — if a skill produces a summary or report, include a "Pending Manual Updates" count so it's visible
+
+## Validation
+
+Before proceeding past any error, confirm:
+- [ ] ALL CAPS re-auth message displayed to user
+- [ ] Waited for user confirmation before retrying
+- [ ] Retried at most once after re-authentication
+- [ ] If retry failed: informed user, suggested manual troubleshooting, offered to skip
+- [ ] CLI fallback attempted before resorting to manual checklist (Step 3)
+- [ ] If write operation failed via both MCP and CLI: pending changes captured with target, operation, payload, and reason
+- [ ] Manual Follow-Up Checklist presented at end of workflow (not per-failure)
+- [ ] Local file writes proceeded independently of Jira/Confluence failures

@@ -1,0 +1,59 @@
+---
+description: Self-improvement loop — log observations and propose upgrades to rules, skills, and processes
+alwaysApply: true
+---
+
+# Self-Improvement Loop
+
+I actively monitor rule effectiveness, interaction quality, and process gaps — then log observations and propose fixes.
+
+## When to Log (MANDATORY)
+
+Log an entry to `IMPROVEMENTS.md` when any of the following occur:
+
+1. **A rule didn't cover an edge case** — the rule was followed but the outcome was wrong or incomplete
+2. **A rule was ambiguous** — you had to interpret or guess what the rule meant
+3. **A skill produced an unexpected result** — the skill ran but the output didn't match expectations
+4. **A repeated manual step could be automated** — you notice the user asking for the same thing across multiple conversations
+5. **An interaction felt inefficient** — too many back-and-forth messages, re-explaining context, or misaligned responses
+
+## How to Surface
+
+### In the moment (primary)
+When the observation is relevant to the current task, flag it immediately:
+- State what you observed plainly
+- Propose a specific fix (rule change, new rule, skill update, process change)
+- Ask if the user wants you to implement it now or log it for later
+- Log the observation in `IMPROVEMENTS.md` regardless of the decision
+
+### At natural breakpoints (secondary)
+For non-urgent patterns — things noticed across multiple interactions that aren't blocking anything:
+- Surface during end-of-week or when there's a natural pause
+- Group related observations together
+- Reference the `IMPROVEMENTS.md` entries
+
+## Entry Format
+
+When adding to `IMPROVEMENTS.md`, use this format under the **Proposed** section:
+
+```
+### [Short descriptive title]
+- **Date observed:** YYYY-MM-DD
+- **What happened:** Brief description
+- **Impact:** Why this matters
+- **Proposed fix:** Specific change to a rule, skill, file, or process
+- **Status:** Proposed
+```
+
+## Lifecycle
+
+1. **Proposed** → I log the observation with a proposed fix
+2. **In Progress** → the user approves, I implement the fix
+3. **Completed** → Fix is live, entry updated with resolution notes
+
+## Guardrails
+
+- Never silently skip a rule because it seems wrong — flag it and propose a change
+- Never modify SOUL.md, existing rules, or skills without surfacing the change to the user first
+- Keep entries concise — this is a log, not a journal
+- If the same type of observation appears 3+ times, escalate it as a pattern worth addressing immediately

@@ -1,0 +1,45 @@
+---
+description: Orient to current project state before responding to non-trivial requests
+alwaysApply: true
+---
+
+# Context Awareness
+
+Before responding to non-trivial requests, I check the workspace for current state so the user doesn't have to re-explain what already exists.
+
+## When to Orient (MANDATORY)
+
+Proactively check context when the request involves:
+
+1. **Project work** — updates, status checks, planning, timeline discussions
+2. **Weekly operations** — start week, end week, weekly updates, priority setting
+3. **Jira or Confluence operations** — creating tickets, syncing timelines, updating pages
+4. **Multi-step tasks** — anything requiring more than a quick single action
+
+Skip context checks for:
+- Simple file edits (marking tasks complete, small text changes)
+- Direct questions with no project dependency ("how does this rule work?")
+- Conversations where the user has already provided full context
+
+## What to Check
+
+### Always (for project-related requests)
+1. **Most recent weekly update** — find the latest file in `weekly-updates/` under the current half-year subfolder (e.g., `1h2026` for Jan–Jun 2026, `2h2025` for Jul–Dec 2025). File format: `MMMDDYYYY-MMMDDYYYY.md`. Check: current priorities, progress, fires, highlights.
+2. **all-projects.md** — check: active projects, their current status, most recent weekly status entry.
+
+### When relevant
+3. **project-timeline.md** — if the request involves dates, sequencing, or planning.
+4. **IMPROVEMENTS.md** — if the request relates to rules, skills, or process changes. Check for pending proposals.
+5. **notes/ folder** — if the request references a specific person, meeting, or project that may have notes.
+
+## How to Use Context
+
+- **Reference it, don't recite it.** Use the context to inform your response — don't dump the raw contents back at the user unless they ask.
+- **Flag mismatches.** If the user's request contradicts what the workspace shows (e.g., asking to start a project that's already in progress), flag it.
+- **Stay current.** If the workspace data looks stale (e.g., weekly update is from 2+ weeks ago), mention it.
+
+## Guardrails
+
+- Don't read every file every conversation — be targeted based on the request type.
+- Don't slow down simple requests with unnecessary context gathering.
+- If context reveals something the user should know (a fire, a stale project, a missed priority), surface it — even if it's tangential to the current request.

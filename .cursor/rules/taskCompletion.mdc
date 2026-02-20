@@ -1,0 +1,88 @@
+---
+alwaysApply: true
+---
+
+# Task Completion
+
+Marks tasks as complete in any markdown task list using checkbox + strikethrough syntax.
+
+**TRIGGER**: When the user asks to mark a task as complete, check off a task, complete a task, or update task status.
+
+## Step 1: Locate the Task
+
+1. If the user specifies a file, use that file
+2. If the user references "this week" or a weekly priority, default to the most recent weekly update file (`MMMDDYYYY-MMMDDYYYY.md`) under `weekly-updates/` in the current half-year subfolder (e.g., `1h2026` for Jan–Jun 2026, `2h2025` for Jul–Dec 2025)
+3. Otherwise, use the currently open/focused file in the IDE
+4. Search for the task text — tasks appear as `- [ ] [Task description]` in any checklist section
+5. **Partial matching for weekly files**: If the user says "mark X as done" and no exact match is found, search for tasks containing the keyword(s). For example, "mark QBR as done" should match `- [ ] QBR doc`. If multiple partial matches exist, ask the user which one.
+
+## Step 2: Mark Complete (MANDATORY — both changes together)
+
+Change `- [ ]` to `- [x]` AND wrap the task text with `~~strikethrough~~`:
+
+```markdown
+Before: - [ ] QBR doc
+After:  - [x] ~~QBR doc~~
+```
+
+**Syntax rules:**
+- Checkbox: lowercase `x` → `- [x]`
+- Strikethrough: wraps the **entire** task text including any markdown formatting → `~~full task text here~~`
+- One space between checkbox and `~~`
+- Original task text must be preserved exactly — do not reword
+- **Always preserve indentation** — if a task is indented (e.g., nested under another item), keep the exact same indentation level
+
+## Step 3: Tasks with Formatting and Sub-items
+
+**Markdown in task text**: Strikethrough wraps the entire text including any formatting:
+
+```markdown
+Before: - [ ] Review **Example Project** PRD
+After:  - [x] ~~Review **Example Project** PRD~~
+```
+
+**Indented/nested tasks**: Preserve the exact indentation:
+
+```markdown
+Before:
+  - [ ] Sub-task under a parent
+    - [ ] Deeply nested task
+
+After (if both marked complete):
+  - [x] ~~Sub-task under a parent~~
+    - [x] ~~Deeply nested task~~
+```
+
+**Sub-items**: Only strikethrough sub-items the user specifies:
+
+```markdown
+- [x] ~~QBR doc~~
+  - ~~Create two versions of roadmap for QBR~~ (sub-item also complete)
+  - Finalize presentation deck (sub-item still incomplete)
+```
+
+## Common Mistakes
+
+| Wrong | Why | Correct |
+|-------|-----|---------|
+| `- [x] Completed task` | Missing strikethrough | `- [x] ~~Completed task~~` |
+| `- [ ] ~~Completed task~~` | Checkbox not checked | `- [x] ~~Completed task~~` |
+| `- [x] ~~Completed~~ task` | Partial strikethrough | `- [x] ~~Completed task~~` |
+| `- [x] ~~Finished QBR doc~~` | Reworded (was "QBR doc") | `- [x] ~~QBR doc~~` |
+| `- [x]  ~~Task~~` | Extra space | `- [x] ~~Task~~` |
+
+## Edge Cases
+
+- **Task already complete**: If the task is already `- [x] ~~text~~`, skip it and tell the user
+- **Multiple matches**: If the task text matches more than one line, ask the user which one to mark
+- **Task not found**: If the task text can't be found (and partial matching didn't help), tell the user and ask for clarification
+- **Partial match in weekly files**: If the user provides a keyword and it partially matches a task in the current weekly file, use that match. If multiple partial matches, ask the user to clarify
+
+## Validation
+
+Before finishing, confirm:
+- [ ] `- [x]` checkbox (not `- [ ]`)
+- [ ] `~~` wraps the entire task text (including any markdown formatting)
+- [ ] Original text preserved unchanged
+- [ ] Indentation preserved exactly
+- [ ] No extra spaces or formatting issues
