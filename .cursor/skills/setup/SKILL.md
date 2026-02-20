@@ -32,13 +32,11 @@ START
   │
   ├─ Step 2: Atlassian (OPTIONAL)
   │   ├─ "Do you use Jira and Confluence?"
-  │   │   ├─ Yes → Prompt for site URL, project key, field IDs
-  │   │   │   ├─ "Do you know your Confluence page IDs?"
-  │   │   │   │   ├─ Yes → Prompt for page IDs
-  │   │   │   │   └─ No → Leave as placeholders, note in output
-  │   │   │   └─ "Do you know your Jira issue type IDs?"
-  │   │   │       ├─ Yes → Prompt for issue type IDs
-  │   │   │       └─ No → Leave as placeholders, note in output
+  │   │   ├─ Yes → Prompt for site URL and project key
+  │   │   │   ├─ Attempt MCP auto-discovery
+  │   │   │   │   ├─ MCP available → Auto-fetch issue types, fields, Confluence spaces
+  │   │   │   │   └─ MCP unavailable → Ask user or leave as placeholders
+  │   │   │   └─ Show what was discovered, confirm with user
   │   │   └─ No → Skip, mark Atlassian as unconfigured
   │   │
   ├─ Step 3: Write Config Files
@@ -74,37 +72,76 @@ Ask: **"Do you use Jira and Confluence? (Rei works without them — weekly track
 
 If **no**: skip to Step 3. Mark Atlassian as unconfigured. Skills that require Jira/Confluence will note this at runtime.
 
-If **yes**, collect:
+If **yes**:
 
-#### Required Atlassian values
+#### 2a: Collect minimum required values (always ask)
 
 | Value | Prompt | Example |
 |-------|--------|---------|
 | Atlassian Site | "What's your Atlassian site URL? (e.g., mycompany.atlassian.net)" | `mycompany.atlassian.net` |
 | Jira Project Key | "What's your Jira project key? (the prefix on your tickets, e.g., ENG, PLAT, ID)" | `ENG` |
 
-#### Optional Atlassian values (ask but don't require)
+#### 2b: Auto-discover via MCP (if available)
+
+Once you have the site URL and project key, attempt to discover the remaining config automatically using the Atlassian MCP tools. **Tell the user:** "Let me try to auto-detect your Jira and Confluence settings..."
+
+**Discovery sequence** — run these in order, skip any that fail:
+
+| What to discover | MCP call | How to extract |
+|-----------------|----------|---------------|
+| **Issue type IDs** | `searchJiraIssuesUsingJql` with JQL: `project = {KEY} ORDER BY created DESC` (maxResults=1), then inspect the returned issue's `issuetype` field. Also try: `getJiraIssue` on a known ticket to see available fields. | Map issue type names (Epic, Task, etc.) to their IDs from the response schema. |
+| **Custom field IDs** (Target Start/End) | `getJiraIssue` on any ticket in the project — request all fields. Look for fields with names containing "Target start", "Target end", or "Start date", "End date". | Custom fields appear as `customfield_NNNNN` in the response. Match by display name. |
+| **Confluence spaces** | `searchConfluencePages` or `getConfluenceSpacesByName` — search for spaces the user has access to. | Present the list and ask the user to pick their team's space. |
+| **Confluence pages** | Once space is identified, `getConfluencePageDescendants` on the space root, or search for pages named "All Projects", "Done Projects", "Project Timeline". | Match by page title. If found, auto-fill the page IDs. |
+| **Cloud ID** | Often available from MCP connection metadata or from any successful API response headers. | Extract if available, otherwise leave as placeholder. |
+
+**Important rules for auto-discovery:**
+- **Never silently fail.** If a discovery call fails (auth error, timeout, 404), note what couldn't be discovered and move on — don't block setup.
+- **Don't trigger the re-auth flow.** If MCP auth fails during setup, just say: "Couldn't connect to Atlassian — I'll leave those fields as placeholders. You can fill them later or run setup again."
+- **Always confirm with the user.** After discovery, show what was found and ask: "Does this look right?" before writing to config. Example:
+
+```
+I found the following from your Jira/Confluence instance:
+
+**Issue Types:**
+- Epic: 10004
+- Task: 10931
+- [etc.]
+
+**Custom Fields:**
+- Target Start: customfield_11227
+- Target End: customfield_11228
+
+**Confluence:**
+- Space: "Engineering" (ID: 1234567)
+- Found page "All Projects" (ID: 9876543)
+- Found page "Project Timeline" (ID: 8765432)
+
+Does this look right? (I'll write these to your config.)
+```
+
+#### 2c: Fill gaps manually (for anything MCP couldn't find)
+
+For any values that auto-discovery didn't resolve, ask the user — but only for values they're likely to know:
+
+| Value | Ask if not discovered | Fallback |
+|-------|----------------------|----------|
+| Target Start Field | "I couldn't auto-detect your 'Target Start' custom field. Do you know the field ID? (Leave blank to skip)" | Leave as `{{TARGET_START_FIELD}}` |
+| Target End Field | Same | Leave as `{{TARGET_END_FIELD}}` |
+| Confluence page IDs | "I couldn't find pages named 'All Projects' or 'Done Projects'. Do you have page IDs for these? (Leave blank — you can set them up later)" | Leave as placeholders |
+
+**Don't ask for:** Cloud ID, issue type IDs, or space IDs if MCP couldn't find them — these are too obscure for most users. Leave as placeholders and note them in the summary.
+
+#### 2d: If MCP is not available at all
+
+If no MCP tools are available (not configured, not enabled), fall back to a minimal manual flow:
 
 | Value | Prompt | Fallback |
 |-------|--------|----------|
-| Target Start Field | "Custom field ID for 'Target Start' date? (Check Jira admin or leave blank)" | Leave as `{{TARGET_START_FIELD}}` |
-| Target End Field | "Custom field ID for 'Target End' date?" | Leave as `{{TARGET_END_FIELD}}` |
-| Cloud ID | "Atlassian Cloud ID? (Leave blank if unsure)" | Leave as `{{CLOUD_ID}}` |
-| Confluence Space ID | "Confluence Space ID? (Leave blank if unsure)" | Leave as `{{CONFLUENCE_SPACE_ID}}` |
-| All Projects Page ID | "Confluence Page ID for your 'All Projects' page? (Leave blank to skip Confluence sync)" | Leave as `{{ALL_PROJECTS_PAGE_ID}}` |
-| Done Projects Page ID | "Confluence Page ID for your 'Done Projects' page?" | Leave as `{{DONE_PROJECTS_PAGE_ID}}` |
-| Timeline Page ID | "Confluence Page ID for your project timeline page?" | Leave as `{{TIMELINE_PAGE_ID}}` |
-| Onboarding Parent Page ID | "Parent page ID for onboarding docs?" | Leave as `{{ONBOARDING_PARENT_PAGE_ID}}` |
-| Tech Discovery Parent ID | "Parent page ID for technical discovery docs?" | Leave as `{{TECH_DISCOVERY_PARENT_ID}}` |
-| Active Projects Parent ID | "Parent page ID for active project pages?" | Leave as `{{ACTIVE_PROJECTS_PARENT_ID}}` |
+| Target Start Field | "Custom field ID for 'Target Start' date? (Check Jira admin → Issues → Custom fields, or leave blank)" | Leave as `{{TARGET_START_FIELD}}` |
+| Target End Field | Same | Leave as `{{TARGET_END_FIELD}}` |
 
-#### Jira Issue Type IDs (ask but don't require)
-
-Ask: **"Do you know your Jira issue type IDs? (These are specific to your Jira instance. If unsure, leave them blank and we'll use defaults.)"**
-
-If yes, collect: Project, Discovery Milestone, Delivery Milestone, Rollout Milestone, Epic, Technical Task IDs.
-
-If no, leave as `{{ISSUE_TYPE_*}}` placeholders.
+Skip all Confluence and issue type ID questions. Tell the user: "Atlassian MCP isn't connected right now, so I can't auto-detect your settings. I've saved your site URL and project key — you can run setup again after enabling MCP to auto-fill the rest."
 
 ### Step 3: Write Config Files
 
@@ -212,7 +249,10 @@ Present a clear summary of what was configured:
 
 - **Never skip the identity step.** Name and role are required.
 - **Atlassian is always optional.** Never make the user feel like Jira/Confluence is required. Core workflows work without it.
-- **Don't flood the user with questions.** Group related questions together. For Atlassian, show required fields first, then ask "want to configure advanced settings?" for the optional ones.
+- **MCP-first for Atlassian config.** If MCP is available, always attempt auto-discovery before asking the user for field IDs. Most EMs won't know their custom field IDs or issue type IDs — infer them.
+- **Don't block setup on MCP failures.** If MCP calls fail, leave values as placeholders and move on. Setup must always complete.
+- **Confirm discovered values.** Always show the user what was auto-detected and get a "looks right" before writing config.
+- **Don't flood the user with questions.** Group related questions together. Only ask for values MCP couldn't discover and the user is likely to know.
 - **Preserve what exists.** If a file already has content (e.g., all-projects.md has projects), don't overwrite it. Only create scaffolding for missing files.
 - **Show what's still incomplete.** If placeholders remain, list them clearly so the user knows what to fill later.
 - **Leave SOUL.md personality intact.** Only replace the "Who You Are" section. Don't touch personality, self-improvement, or behavioral sections.
