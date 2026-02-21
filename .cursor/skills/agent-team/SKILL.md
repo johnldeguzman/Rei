@@ -42,6 +42,32 @@ The division is clear:
 - **Specialists** = thinking partners. They provide perspective, catch blind spots, and propose actions.
 - **Rei** = the operator. I present recommendations, get approval, and execute with all available tools (Jira, Confluence, file writes, etc.).
 
+### Specialist review of execution
+
+I have the tools but not the specialist's lens. For non-trivial actions, the specialist reviews my execution before it's finalized.
+
+**When to loop back for review:**
+
+| Action type | Review needed? | Example |
+|-------------|---------------|---------|
+| Mechanical / data entry | No | Update a Jira field, mark a task done, write a date |
+| Status write-up | Yes | Weekly summary, project status narrative, escalation framing |
+| Prioritization or sequencing | Yes | Reordering priorities, deferring scope, adjusting timelines |
+| Architecture or technical decision | Yes | Proposing a design change, scoping technical work, phasing milestones |
+| Risk assessment or communication | Yes | Framing a risk to stakeholders, drafting a go/no-go recommendation |
+
+**Review flow:**
+
+1. I execute the recommendation and capture the result (e.g., the updated file, the drafted message, the new timeline)
+2. I spawn the same specialist with the execution output and ask: "Here's how I executed your recommendation. Does this correctly reflect your intent? Flag anything I got wrong or missed."
+3. If the specialist flags corrections → I apply them and present the corrected result
+4. If the specialist approves → I present the final result to the user
+
+**Rules:**
+- Review is a single pass — one check, not an iterative loop. If the specialist raises significant concerns, surface them to the user rather than auto-correcting repeatedly.
+- The review agent gets: the original recommendation, my execution output, and the relevant context. Keep it focused.
+- Skip review for batches of mechanical actions (e.g., updating 5 Jira fields). Apply review to the judgment calls within the batch, not every line item.
+
 ### Guardrails
 
 - **Recommendations require reasoning.** No "you should do X" without explaining why.
