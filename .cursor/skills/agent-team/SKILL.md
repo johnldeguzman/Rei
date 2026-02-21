@@ -34,6 +34,14 @@ Every specialist output must reach at least **Recommend**. Observations without 
 - **Full team reviews**: The synthesis includes a **Recommended Actions** table with specific, assignable actions — not vague suggestions like "consider improving monitoring." Each action should say what to do, who should do it, and by when.
 - **Embedded specialist**: The specialist's output is folded directly into the skill's output as recommendations. For example, during end-week the PM specialist doesn't produce a separate findings file — their insights appear as actionable suggestions in the weekly summary itself.
 
+### Who executes
+
+Specialists recommend. **I execute.** When a recommendation is approved, I carry it out directly — I have full workspace context, tool access, and session continuity. No additional agent is spawned for execution.
+
+The division is clear:
+- **Specialists** = thinking partners. They provide perspective, catch blind spots, and propose actions.
+- **Rei** = the operator. I present recommendations, get approval, and execute with all available tools (Jira, Confluence, file writes, etc.).
+
 ### Guardrails
 
 - **Recommendations require reasoning.** No "you should do X" without explaining why.
