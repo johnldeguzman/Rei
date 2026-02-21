@@ -34,33 +34,58 @@ When suggesting:
 - "This looks like it could benefit from a team review — want me to run [relevant specialists] perspectives on it?"
 - Respect the answer. If the user says no, drop it and proceed normally.
 
+## Embed in Skills (Lightweight — Single Specialist)
+
+Automatically embed a specialist into these skill workflows. This is not a full team review — it's a focused consultation that produces 3-5 actionable recommendations integrated into the skill's output.
+
+| Skill trigger | Specialist | What they add |
+|---|---|---|
+| **end-week** / "end my week" | Product Manager | Assess progress vs. goals, flag delivery risks, recommend next-week priority adjustments |
+| **start-week** / "start my week" | Product Manager | Review incoming priorities, flag sequencing issues, suggest focus areas |
+| **timeline-sync** / "sync timeline" | Product Manager | Analyze timeline for conflicts, unrealistic durations, recommend adjustments |
+| **jira-health-check** / "jira health check" | Product Manager | Prioritize which hygiene issues matter vs. noise, recommend cleanup order |
+| **jira-project** / "create a project" | Engineering | Review project structure, milestone breakdown, flag missing epics or unrealistic phasing |
+| Technical discussion (code, architecture, design) | Engineering | Feasibility, trade-offs, implementation approach |
+
+When embedding:
+- Spawn the specialist as part of the skill workflow (see Embedded Specialist Mode in the agent team skill)
+- Don't announce it as a "team review" — it's just part of how the skill operates
+- If the specialist surfaces something that needs deeper analysis, suggest escalating to a full team review
+
 ## Do NOT Trigger
 
-Never activate or suggest the agent team for:
+Never activate the **full team review** for:
 
-- Simple status updates or weekly operations (start week, end week, timeline sync)
 - Single-domain questions ("how does OAuth work?", "what's a good caching strategy?")
 - File edits, task completion, or small changes
 - Casual conversation or quick questions
-- Work that's purely operational (Jira updates, Confluence syncs, weekly tracking)
-- When the user explicitly says they just want a quick take or doesn't need a deep review
+- Pure Jira/Confluence data entry (updating fields, syncing pages)
+- When the user explicitly says they just want a quick take or don't need a deep review
 - Simple bug fixes or code changes that don't involve architectural decisions
+
+Note: Skills listed in the "Embed in Skills" table above still get their embedded specialist — this section only applies to full multi-agent team reviews.
 
 ## Specialist Selection
 
-When triggered, select specialists based on content type:
+### Full team reviews
 
 | Content Type | Specialists |
 |---|---|
-| PRD / Product Spec | Security + Engineering + Ops |
+| PRD / Product Spec | Product + Security + Engineering + Ops |
 | Architecture / Design Doc | Engineering + Security |
-| Launch Readiness | Ops + Security + Engineering |
-| Vendor / Tool Evaluation | Security + Engineering |
+| Launch Readiness | Ops + Security + Engineering + Product |
+| Vendor / Tool Evaluation | Product + Security + Engineering |
 | API Design | Security + Engineering |
 | Incident / Post-mortem | Engineering + Ops |
 | Infrastructure Change | Ops + Security |
+| Feature Proposal / RFC | Product + Engineering + Security |
+| Scope / Timeline Review | Product + Engineering |
 
-Default to all three if the content spans multiple categories or if unsure.
+Default to all four if the content spans multiple categories or if unsure.
+
+### Embedded (single specialist per skill)
+
+See the "Embed in Skills" table above — each skill maps to exactly one specialist.
 
 ## User Override
 

@@ -9,7 +9,95 @@ Orchestrates parallel specialist sub-agents for multi-perspective analysis. Agen
 
 ## When This Activates
 
-The agent team activates based on the `agentTeam.mdc` rule, which detects when content naturally warrants multi-perspective review. See that rule for trigger conditions, or the user can request it manually.
+The agent team operates in two modes:
+
+1. **Full team review** — Multi-specialist analysis for PRDs, architecture docs, launch readiness, etc. Triggered by the `agentTeam.mdc` rule or manual request.
+2. **Embedded specialist** — A single specialist is woven into an existing skill workflow (e.g., PM during end-week, engineer during technical planning). Triggered by the `agentTeam.mdc` skill-integration mapping.
+
+## Agency — Think, Recommend, Act
+
+Specialists don't just analyze and report. They have **agency**: the ability to propose concrete actions and drive outcomes.
+
+### What agency means
+
+| Level | Description | Example |
+|-------|-------------|---------|
+| **Observe** | Identify what's happening | "3 of 5 projects slipped this week" |
+| **Assess** | Explain why it matters | "Two slips are on the same dependency — if it's not unblocked, next week is worse" |
+| **Recommend** | Propose a specific action | "Escalate the shared dependency to [owner]. Defer Project C's milestone by 1 week to absorb the slip." |
+| **Act** | Execute the recommendation (with confirmation) | Update the weekly file, draft the escalation message, adjust the timeline |
+
+Every specialist output must reach at least **Recommend**. Observations without recommendations are incomplete.
+
+### How this works in practice
+
+- **Full team reviews**: The synthesis includes a **Recommended Actions** table with specific, assignable actions — not vague suggestions like "consider improving monitoring." Each action should say what to do, who should do it, and by when.
+- **Embedded specialist**: The specialist's output is folded directly into the skill's output as recommendations. For example, during end-week the PM specialist doesn't produce a separate findings file — their insights appear as actionable suggestions in the weekly summary itself.
+
+### Guardrails
+
+- **Recommendations require reasoning.** No "you should do X" without explaining why.
+- **Destructive actions need confirmation.** Anything that changes Jira, modifies files, or sends communications — always confirm with the user before executing.
+- **Prioritize.** If there are 10 possible actions, highlight the top 1-3 that matter most. Don't overwhelm with a laundry list.
+
+## Embedded Specialist Mode
+
+Some workflows benefit from a specialist perspective without the overhead of a full multi-agent review. In embedded mode, a single specialist runs as part of an existing skill and contributes directly to that skill's output.
+
+### When to use embedded mode
+
+| Skill | Specialist | What they contribute |
+|-------|-----------|---------------------|
+| **end-week** | Product Manager | Assess week's progress against goals. Flag scope creep, stalled projects, delivery risks. Recommend priority adjustments for next week. |
+| **start-week** | Product Manager | Review incoming priorities. Flag sequencing issues, missing dependencies, unrealistic commitments. Suggest focus areas. |
+| **timeline-sync** | Product Manager | Analyze timeline for scheduling conflicts, unrealistic durations, missing buffers. Recommend adjustments. |
+| **jira-health-check** | Product Manager | Interpret hygiene findings in project context. Prioritize which issues actually matter vs. noise. |
+| **jira-project** (create) | Engineering | Review project structure, milestone breakdown, and technical scoping. Flag missing epics or unrealistic phasing. |
+| **Any technical discussion** | Engineering | When the conversation involves code, architecture, or technical decisions — bring engineering perspective on feasibility, trade-offs, and implementation approach. |
+
+### How embedded mode works
+
+1. The skill reads this mapping (or the `agentTeam.mdc` rule triggers it)
+2. Spawn **one** specialist sub-agent with:
+   - Their specialist profile (from `specialists/{type}.md`)
+   - The relevant context from the skill (e.g., this week's data, the timeline, the Jira results)
+   - A focused prompt: "You're embedded in [skill]. Here's the context. Provide 3-5 actionable recommendations."
+3. The specialist's output is **integrated into the skill's output** — not written to a separate findings file
+4. No synthesis step, no resolution loop — this is a lightweight consultation
+
+### Embedded specialist prompt structure
+
+```
+You are a {specialist_type} specialist embedded in a {skill_name} workflow.
+
+## Your Lens
+{specialist profile content}
+
+## Context
+{relevant data from the skill — e.g., weekly progress, timeline, Jira results}
+
+## Your Task
+Review this context through your specialist lens. Provide:
+1. 3-5 specific, actionable recommendations (not observations — actions)
+2. For each: what to do, why it matters, and suggested priority (high/medium/low)
+3. Flag anything that needs immediate attention vs. next-week items
+
+Keep it concise. This feeds directly into the user's workflow output.
+```
+
+### Rules for embedded mode
+
+- **One specialist per skill invocation.** Don't embed multiple specialists — if the situation warrants more, escalate to a full team review.
+- **Lightweight, not exhaustive.** Embedded mode produces 3-5 focused recommendations, not a comprehensive review document.
+- **Integrated output.** The specialist's recommendations appear inside the skill's normal output (e.g., in the weekly summary, not in a separate file).
+- **No `.agent-team/` directory.** Embedded mode doesn't create findings files — the output goes directly into the skill's flow.
+- **Escalation path.** If the embedded specialist surfaces something that needs deeper multi-perspective analysis, recommend a full team review: "This warrants a deeper look — want me to run the full team on it?"
+
+---
+
+## Full Team Review
+
+The full team review is the original multi-agent flow for deep analysis. Everything below applies to full team reviews.
 
 ## Architecture
 
@@ -201,6 +289,12 @@ In the chat message to the user, present ONLY:
 
 ## Critical Rules
 
+### Agency
+- **Every specialist output must include actionable recommendations.** Observations without "here's what to do about it" are incomplete.
+- **Recommendations must be specific and assignable.** "Improve monitoring" is not actionable. "Add latency alerts on the auth endpoint with a 500ms P99 threshold" is.
+- **Confirm before acting.** Specialists can recommend destructive or external actions, but I always confirm with the user before executing.
+
+### Full team reviews
 - **Never skip the synthesis step.** Raw specialist output isn't useful on its own — the value is in cross-referencing.
 - **Always tell the user which specialists are running and why.** No silent multi-agent spawning.
 - **Include full content in agent prompts.** Agents cannot reliably read workspace files on their own — inline everything they need.
@@ -210,6 +304,11 @@ In the chat message to the user, present ONLY:
 - **Use the right specialists.** Don't spawn ops for a pure API design review. Don't skip security for anything touching auth or data.
 - **Chat is the headline, file is the detail.** Never dump the full synthesis into a chat message. Write `.agent-team/synthesis.md` for the full review, present a short scannable summary in chat.
 - **Findings are working files, not permanent artifacts.** Offer cleanup after synthesis. Auto-clean when the user moves on or a new review starts. Never clean up mid-conversation while findings are still being referenced.
+
+### Embedded mode
+- **One specialist, focused output.** Embedded mode is a lightweight consultation — 3-5 recommendations, not a full review.
+- **Integrated, not separate.** Output folds into the skill's normal flow. No findings files, no synthesis step.
+- **Escalate when warranted.** If the embedded specialist finds something that needs multi-perspective analysis, suggest a full team review.
 
 ## Error Handling
 
