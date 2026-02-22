@@ -1,0 +1,17 @@
+# Ignore everything except repo content
+*
+!.gitignore
+!.cursor/
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/skills/
+!.cursor/skills/**
+!README.md
+!README-getting-started.md
+!SOUL.md
+!IMPROVEMENTS.md
+!all-projects.md
+!done-projects.md
+!project-timeline.md
+!LICENSE
+.DS_Store
