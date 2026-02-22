@@ -88,6 +88,7 @@ Some workflows benefit from a specialist perspective without the overhead of a f
 | **jira-health-check** | Product Manager | Interpret hygiene findings in project context. Prioritize which issues actually matter vs. noise. |
 | **jira-project** (create) | Engineering | Review project structure, milestone breakdown, and technical scoping. Flag missing epics or unrealistic phasing. |
 | **Any technical discussion** | Engineering | When the conversation involves code, architecture, or technical decisions — bring engineering perspective on feasibility, trade-offs, and implementation approach. |
+| **Rule, skill, or prompt changes** | AI | Review prompt structure, directive clarity, compliance patterns, token efficiency, and discoverability. Catch ambiguity, redundancy, and behavioral edge cases before deploying. |
 
 ### How embedded mode works
 
@@ -163,8 +164,9 @@ Not every review needs all specialists. Select based on content:
 | Infrastructure Change | Ops + Security |
 | Feature Proposal / RFC | Product + Engineering + Security |
 | Scope / Timeline Review | Product + Engineering |
+| Rule / Skill / Prompt Design | AI + Engineering |
 
-Default to all four if unsure. For purely technical docs with no user-facing impact, skip Product.
+Default to all five if unsure. For purely technical docs with no user-facing impact, skip Product.
 
 ## Workflow
 

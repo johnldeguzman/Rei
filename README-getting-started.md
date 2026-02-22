@@ -180,7 +180,7 @@ All workflows are triggered by natural language. No special syntax needed.
 | **"is this ready to launch?"** | Runs launch readiness assessment |
 | **"run a team review on this"** | Manually triggers a team review |
 
-The agent team writes findings to `.agent-team/` and synthesizes a verdict with top risks and recommendations. Specialists: Security, Engineering, Ops, Product.
+The agent team writes findings to `.agent-team/` and synthesizes a verdict with top risks and recommendations. Specialists: Security, Engineering, Ops, Product, AI.
 
 ### People operations
 
@@ -266,6 +266,31 @@ The setup wizard collects all of these. You can also fill them in `shared/config
 
 ---
 
-**Last Updated:** February 20, 2026
+## 10. Global Setup (Optional)
+
+By default, Rei only runs in the workspace where its rules and skills live. If you want Rei available across **all** Cursor workspaces, you can set up global symlinks.
+
+### How it works
+
+1. Rename the workspace directories so Cursor doesn't auto-load them locally:
+   - `.cursor/rules/` → `.cursor/rules-src/`
+   - `.cursor/skills/` → `.cursor/skills-src/`
+2. Create global directories and symlink each file/folder:
+   - `~/.cursor/rules/*.mdc` → symlinks to `.cursor/rules-src/*.mdc`
+   - `~/.cursor/skills/*` → symlinks to `.cursor/skills-src/*`
+3. Symlink `SOUL.md` to your home directory: `~/SOUL.md`
+
+This gives you single-load in every workspace (no token duplication) with a single source of truth in this repo.
+
+### Things to know
+
+- Edits to existing files propagate automatically through symlinks — no re-sync needed.
+- Only **new** files need a symlink created.
+- PM-specific rules (weekly updates, Jira, etc.) will load in all workspaces but won't trigger without the right files present.
+- If you move this workspace, symlinks break — re-run the symlink commands from the new location.
+
+---
+
+**Last Updated:** February 21, 2026
 
 **This is a living document.** As you customize Rei for your workflow, update this README to reflect your setup. Rei can help with that too — say "update the README."

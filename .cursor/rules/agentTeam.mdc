@@ -34,9 +34,23 @@ When suggesting:
 - "This looks like it could benefit from a team review — want me to run [relevant specialists] perspectives on it?"
 - Respect the answer. If the user says no, drop it and proceed normally.
 
+## Always Embed (Non-Skill Work)
+
+These are NOT skill triggers — they apply to **any** conversation where the work matches the pattern. Embed the specialist automatically before executing. This is mandatory, not optional.
+
+| Work pattern | Specialist | What they add |
+|---|---|---|
+| **Technical implementation** — scripts, automation, infrastructure, system changes, config restructuring | Engineering | Review the plan before execution — catch path issues, env assumptions, missing error handling, integration gaps |
+| **Technical discussion** — code, architecture, design decisions | Engineering | Feasibility, trade-offs, implementation approach |
+| **Rule, skill, or prompt changes** — creating/modifying rules, skills, specialist profiles, or behavioral directives | AI | Review prompt structure, discoverability, compliance patterns, token efficiency, and unintended side effects |
+
+**Pre-flight gate (MANDATORY):** Before executing work that matches any row above — stop. Spawn the specialist. Integrate their recommendations. Only then proceed to execution. Do not skip this step, even if the work feels straightforward.
+
+This is not a "team review" — it's a pre-flight check.
+
 ## Embed in Skills (Lightweight — Single Specialist)
 
-Automatically embed a specialist into these skill workflows. This is not a full team review — it's a focused consultation that produces 3-5 actionable recommendations integrated into the skill's output.
+Automatically embed a specialist into these named skill workflows. This is not a full team review — it's a focused consultation that produces 3-5 actionable recommendations integrated into the skill's output.
 
 | Skill trigger | Specialist | What they add |
 |---|---|---|
@@ -45,11 +59,10 @@ Automatically embed a specialist into these skill workflows. This is not a full 
 | **timeline-sync** / "sync timeline" | Product Manager | Analyze timeline for conflicts, unrealistic durations, recommend adjustments |
 | **jira-health-check** / "jira health check" | Product Manager | Prioritize which hygiene issues matter vs. noise, recommend cleanup order |
 | **jira-project** / "create a project" | Engineering | Review project structure, milestone breakdown, flag missing epics or unrealistic phasing |
-| Technical discussion (code, architecture, design) | Engineering | Feasibility, trade-offs, implementation approach |
 
-When embedding:
-- Spawn the specialist as part of the skill workflow (see Embedded Specialist Mode in the agent team skill)
-- Don't announce it as a "team review" — it's just part of how the skill operates
+When embedding (both tables):
+- Spawn the specialist as part of the workflow (see Embedded Specialist Mode in the agent team skill)
+- Don't announce it as a "team review" — it's just part of how the work operates
 - If the specialist surfaces something that needs deeper analysis, suggest escalating to a full team review
 
 ## Do NOT Trigger
@@ -63,7 +76,7 @@ Never activate the **full team review** for:
 - When the user explicitly says they just want a quick take or don't need a deep review
 - Simple bug fixes or code changes that don't involve architectural decisions
 
-Note: Skills listed in the "Embed in Skills" table above still get their embedded specialist — this section only applies to full multi-agent team reviews.
+Note: This section only blocks full multi-agent team reviews. The "Embed in Skills" table and the "Always Embed" patterns (technical implementation, technical discussion, rule/skill/prompt changes) still apply regardless.
 
 ## Specialist Selection
 
@@ -80,8 +93,9 @@ Note: Skills listed in the "Embed in Skills" table above still get their embedde
 | Infrastructure Change | Ops + Security |
 | Feature Proposal / RFC | Product + Engineering + Security |
 | Scope / Timeline Review | Product + Engineering |
+| Rule / Skill / Prompt Design | AI + Engineering |
 
-Default to all four if the content spans multiple categories or if unsure.
+Default to all five if the content spans multiple categories or if unsure.
 
 ### Embedded (single specialist per skill)
 
