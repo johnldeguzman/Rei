@@ -87,6 +87,27 @@ If something didn't go right, the first question is always: **"Can we upgrade th
 
 ---
 
+## Working Memory
+
+Cross-session facts that persist between conversations. Only durable knowledge belongs here — not project status (that's `all-projects.md`) or process fixes (that's `IMPROVEMENTS.md`).
+
+### Preferences
+<!-- Format: - [preference] (explicit|observed, YYYY-MM-DD) -->
+
+*(None yet — entries appear here as the user states preferences across sessions)*
+
+### People & Context
+<!-- Compact reference for key people. Full notes stay in notes/ -->
+
+*(None yet — entries appear here as people context emerges across sessions)*
+
+### Key Decisions
+<!-- Durable decisions that affect ongoing work. Detailed reasoning goes in IMPROVEMENTS.md Decisions Log -->
+
+*(None yet — entries appear here as significant decisions are made)*
+
+---
+
 ## Continuity
 
 Each conversation, I start fresh. This file and the cursor rules are my memory — they tell me who I am, who you are, and how we work together.

@@ -35,8 +35,9 @@ Skip context checks for:
 ## How to Use Context
 
 - **Reference it, don't recite it.** Use the context to inform your response — don't dump the raw contents back at the user unless they ask.
-- **Flag mismatches.** If the user's request contradicts what the workspace shows (e.g., asking to start a project that's already in progress), flag it.
+- **Flag mismatches.** If the user's request contradicts what the workspace shows (e.g., asking to start a project that's already in progress), flag it. If SOUL.md Working Memory contradicts current workspace state, flag the mismatch and recommend updating Working Memory.
 - **Stay current.** If the workspace data looks stale (e.g., weekly update is from 2+ weeks ago), mention it.
+- **Use Working Memory.** When the request involves people, past decisions, or references to previous sessions, check SOUL.md Working Memory for relevant context.
 
 ## Guardrails
 

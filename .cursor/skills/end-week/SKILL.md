@@ -75,6 +75,12 @@ Wraps up the week by summarizing project updates, creating executive summaries, 
     └──────────┬──────────┘
                │
     ┌──────────▼──────────┐
+    │ Step 7.6: Working    │
+    │ Memory review +      │
+    │ compaction (MANDATORY)│
+    └──────────┬──────────┘
+               │
+    ┌──────────▼──────────┐
     │ Step 8: Mark week    │
     │ as ended (LAST)      │
     └─────────────────────┘
@@ -155,6 +161,16 @@ Wraps up the week by summarizing project updates, creating executive summaries, 
 2. If yes: Run the timeline-sync skill workflow (see [timeline-sync/SKILL.md](../timeline-sync/SKILL.md))
 3. If no: Skip and proceed to mark week as ended
 
+### Step 7.6: Working Memory Review + Compaction (MANDATORY)
+
+1. Read SOUL.md Working Memory section
+2. **Staleness check**: Flag entries older than 3 months or contradicted by current workspace state (all-projects.md, weekly updates)
+3. **Redundancy check**: Flag entries now covered by rules or SOUL core sections
+4. **Size check**: If Working Memory exceeds 100 lines, recommend aggressive trimming
+5. Propose removals, updates, or consolidations to the user
+6. Apply only the changes the user approves
+7. If Working Memory section is empty or doesn't exist, skip this step
+
 ### Step 8: Mark Week as Ended (MANDATORY - LAST STEP)
 
 **Only after ALL steps complete**, add:
@@ -197,6 +213,7 @@ See [shared/config.md](../shared/config.md) for full error handling guidelines. 
 - [ ] Jira statuses verified
 - [ ] User asked about Confluence sync
 - [ ] User asked about Project Timeline sync
+- [ ] Working Memory reviewed for staleness, redundancy, and size (or skipped if empty)
 - [ ] Week marked as ended (LAST step)
 
 See [templates.md](templates.md) for executive summary format and examples.

@@ -46,6 +46,7 @@ Works immediately with no external dependencies:
 |---------|---------|
 | Weekly tracking | "start my week", "end my week" |
 | Task management | "mark X as done", "update for [project]" |
+| Working memory | "remember that", "save that", "note that for next time" |
 | Agent team reviews | Share a PRD, RFC, or design doc |
 | Performance reviews | "create performance reviews" (local data only) |
 | Self-improvement loop | Automatic — logs to IMPROVEMENTS.md |
@@ -103,6 +104,7 @@ Rei's personality and behavioral directives live in `SOUL.md`. The setup wizard 
 |---------|---------------|
 | **Who You Are** | Your name, role, communication style, expectations (filled by setup) |
 | **Core Personality** | Adjust tone — Rei defaults to warm-but-direct with no fluff |
+| **Working Memory** | Persists preferences, people context, and key decisions across sessions. Managed by the memory rule — say "remember that" or Rei will proactively offer to log decisions during conversations |
 | **What I Never Do** | Add or remove constraints based on your preferences |
 | **How I Communicate** | Set defaults — concise vs. thorough, technical depth, formality level |
 
@@ -260,8 +262,9 @@ The setup wizard collects all of these. You can also fill them in `shared/config
 - **Run "check my setup" if something seems off.** It'll tell you exactly what's missing.
 - **Keep the weekly file current.** Rei builds summaries and reports from what's logged there.
 - **Use the triggers.** Natural language commands activate tested, multi-step workflows.
+- **Say "remember that" when something's worth keeping.** Preferences, people context, and key decisions persist in Working Memory across sessions. Rei will also proactively offer to log decisions it recognizes during project conversations.
 - **Say when something's off.** Rei will propose a system fix, not just a one-time adjustment.
-- **Review IMPROVEMENTS.md periodically.** Clearing proposed items keeps the system sharp.
+- **Review IMPROVEMENTS.md periodically.** Clearing proposed items and reviewing the Decisions Log keeps the system sharp.
 - **Let the agent team review important docs.** Share PRDs or design docs for multi-perspective review.
 
 ---

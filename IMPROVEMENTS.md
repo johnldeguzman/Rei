@@ -41,3 +41,22 @@ Each entry follows this format:
 *(Completed entries are kept as a record)*
 
 ---
+
+## Decisions Log
+
+Significant decisions with reasoning — things worth referencing in future sessions that don't warrant a rule/skill change. For durable behavioral preferences, use SOUL.md Working Memory instead.
+
+Each entry follows this format:
+
+```
+### [Decision title]
+- **Date:** YYYY-MM-DD
+- **Project:** [project name or "General"]
+- **Decision:** What was decided
+- **Reasoning:** Why, including trade-offs considered
+- **Context:** What prompted it
+```
+
+*(Decisions appear here as they're made during project conversations)*
+
+---

@@ -1,0 +1,125 @@
+---
+description: Manage persistent memory — write gate, decision capture, precedence, staleness, and compaction triggers
+alwaysApply: true
+---
+
+# Memory Management
+
+Governs how I write, read, and maintain persistent memory across sessions. Memory lives in two places:
+
+- **SOUL.md Working Memory** — durable preferences, people context, key decisions (compact, always loaded)
+- **IMPROVEMENTS.md Decisions Log** — significant decisions with detailed reasoning (loaded when relevant)
+
+## Write Gate (MANDATORY)
+
+### What qualifies for a memory write
+
+Only write when the information is **durable** — meaning it will be relevant in future sessions, not just this one.
+
+| Write to | When | Example |
+|---|---|---|
+| SOUL Working Memory → Preferences | The user explicitly states a recurring preference | "I prefer async standups" |
+| SOUL Working Memory → People & Context | A person's role, relationship, or working style comes up across sessions | "Sarah handles the EAP integration, prefers Slack over email" |
+| SOUL Working Memory → Key Decisions | A decision is made that affects how I should behave going forward | "We decided to sequence projects, not parallelize" |
+| IMPROVEMENTS Decisions Log | A project-specific or technical decision with reasoning worth archiving | "Chose Redis over Memcached for session caching because..." |
+
+### What does NOT get written
+
+- Project status, priorities, or dates → `all-projects.md` and weekly updates own these
+- Actionable rule/skill fixes → `IMPROVEMENTS.md` Proposed section (see selfImprovement.mdc)
+- Temporary context (debugging sessions, one-off questions, transient tasks)
+- Anything already captured in another canonical file
+
+### Verification before writing
+
+- **Explicit statements only.** Only write what the user explicitly stated or I directly observed in this session. Do not infer preferences from single offhand comments.
+- **Confirm before writing preferences.** If something sounds like a durable preference, ask: "That sounds like a lasting preference — want me to save it to Working Memory?" Do not silently write.
+- **Decisions can be offered proactively.** When I recognize a decision being made, I can offer — not required to wait for "log that decision."
+
+## Source Attribution (MANDATORY)
+
+Every Working Memory entry must include attribution:
+
+```markdown
+- [content] (explicit, YYYY-MM-DD)
+- [content] (observed, YYYY-MM-DD)
+```
+
+- **explicit** — the user directly stated this
+- **observed** — I observed this pattern in this session (e.g., repeated choices, stated preferences). Requires explicit confirmation before first write: "That sounds like a lasting preference — want me to save it to Working Memory?"
+
+Decisions Log entries use the structured format defined in IMPROVEMENTS.md.
+
+## Proactive Decision Capture (MANDATORY)
+
+During project conversations, actively recognize when decisions are being made. **Decision-recognition check:** when discussing projects, options, or trade-offs, ask yourself: "Is there a decision to log?" If yes, follow the capture flow below.
+
+Decisions often surface as:
+
+- "Let's go with X" / "We'll do X instead of Y"
+- Choosing between options after a trade-off discussion
+- Resolving an open question with a specific direction
+- Agreeing on an approach, timeline, or scope change
+
+When I recognize a decision:
+
+1. **Acknowledge it naturally** — don't interrupt the flow
+2. **At a natural pause**, offer: "That's a decision worth logging — [short summary]. Want me to save it?" or bundle multiple: "A few decisions came out of this conversation: [list]. Want me to log them?"
+3. **If the user confirms**, determine destination:
+   - Durable behavioral decision → SOUL Working Memory (Key Decisions)
+   - Project/technical decision with reasoning → IMPROVEMENTS Decisions Log
+4. **If the user declines or ignores**, move on — no repeated prompting
+
+### What counts as a decision vs. just a task
+
+| Decision (log it) | Task (don't log it) |
+|---|---|
+| "We're going with approach A over B because..." | "Update the Jira ticket" |
+| "Let's sequence projects instead of parallelizing" | "Mark that as done" |
+| "Redis for session caching, not Memcached" | "Add a comment to the PR" |
+| "Ship the MVP without feature X" | "Create the weekly update" |
+
+## Precedence (MANDATORY)
+
+When sources conflict, follow this hierarchy:
+
+1. **User's current utterance** — always wins
+2. **Workspace state files** — `all-projects.md`, weekly updates, `project-timeline.md` — authoritative for project facts
+3. **SOUL.md Working Memory** — authoritative for preferences, people, behavioral decisions
+4. **IMPROVEMENTS.md Decisions Log** — reference for past reasoning
+
+If Working Memory contradicts workspace state:
+- Flag the mismatch immediately
+- Defer to workspace state for the current response
+- Offer to update Working Memory: "Working Memory says X, but all-projects shows Y. Want me to update Working Memory?"
+
+## Staleness Checks
+
+### During start-week and end-week (MANDATORY)
+
+Scan SOUL.md Working Memory for:
+- Entries older than 3 months — flag for review
+- Entries contradicted by current workspace state — flag for update or removal
+- Entries that duplicate information now in rules or SOUL core sections — flag for removal
+
+### During any conversation (opportunistic)
+
+If I notice a Working Memory entry that contradicts what the user just said or what the workspace shows, flag it immediately and offer to update.
+
+## Size Discipline
+
+- SOUL.md Working Memory stays under **100 lines** (~4KB)
+- If approaching the limit, recommend compaction during the next end-week
+- Prefer consolidation over deletion — merge related entries, tighten wording
+- If a Working Memory entry has grown into something that deserves its own file (e.g., a complex people map), suggest extracting to `notes/`
+
+## Compaction
+
+Compaction runs as part of end-week. During end-week, after Step 7.5 (timeline sync) and before Step 8 (mark ended), run compaction: review Working Memory, propose removals/updates, confirm with the user before writing. During compaction:
+
+1. Review all Working Memory entries
+2. Remove: entries older than 3 months with no recent relevance, entries now covered by rules or SOUL core, entries contradicted by workspace state
+3. Update: entries with stale details, entries that can be consolidated
+4. Confirm changes with the user before writing
+
+If end-week hasn't run in 2+ weeks and Working Memory has 50+ entries, suggest compaction: "Working Memory is getting full — want to do a quick review?"

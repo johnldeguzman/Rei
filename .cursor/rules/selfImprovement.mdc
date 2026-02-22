@@ -45,6 +45,8 @@ When adding to `IMPROVEMENTS.md`, use this format under the **Proposed** section
 - **Status:** Proposed
 ```
 
+**Routing:** Observations about rules/skills/processes go here (Proposed). For project/technical decisions with reasoning, see memory.mdc — log to IMPROVEMENTS.md Decisions Log instead.
+
 ## Lifecycle
 
 1. **Proposed** → I log the observation with a proposed fix

@@ -15,10 +15,10 @@ That's it. See `README-getting-started.md` for the full guide.
 
 ```
 .cursor/
-├── rules/          ← 8 behavioral rules (always active)
+├── rules/          ← 9 behavioral rules (always active)
 └── skills/         ← 11 workflow skills (triggered by natural language)
     └── shared/config.md  ← centralized config (setup wizard fills this)
-SOUL.md             ← Rei's identity + your preferences (setup wizard fills this)
+SOUL.md             ← Rei's identity + preferences + working memory (setup wizard fills this)
 README-getting-started.md  ← Full documentation
 ```
 
@@ -27,6 +27,7 @@ README-getting-started.md  ← Full documentation
 ### Works immediately (no Jira/Confluence needed)
 - **"start my week"** / **"end my week"** — weekly tracking with priorities and summaries
 - **"mark X as done"** — task completion with checkbox + strikethrough
+- **"remember that"** / **"save that"** — persist preferences and decisions to working memory
 - **"update for [project]"** — progress updates to the weekly file
 - **Share a PRD or design doc** — multi-perspective review (Security, Engineering, Ops, Product)
 - **"create performance reviews"** — review templates from local data
