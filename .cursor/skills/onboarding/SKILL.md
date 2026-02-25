@@ -1,6 +1,6 @@
 ---
 name: onboarding
-description: Create onboarding plans for new team members joining {{TEAM_NAME}}. Generates a local draft for review, then publishes to Confluence. Use when the user says "new person joining the team", "onboard someone", "create onboarding plan", or mentions a new hire starting.
+description: Create onboarding plans for new team members joining the team. Generates a local draft for review, then publishes to Confluence. Use when the user says "new person joining the team", "onboard someone", "create onboarding plan", or mentions a new hire starting.
 ---
 
 # Onboarding Plan

@@ -79,15 +79,15 @@ See [shared/config.md](../shared/config.md) for status calculation rules and Con
 
 ### Fires - Week of Jan 19 - Jan 24
 
-**Database Connection Issue (Jan 20)** - [PRJ-2001](https://{{ATLASSIAN_SITE}}/browse/PRJ-2001): Production database connections were exhausted during peak hours. Identified connection pool misconfiguration. **Resolution:** Increased connection pool size and added monitoring alerts.
+**Database Connection Issue (Jan 20)** - [PROJ-150](https://{{ATLASSIAN_SITE}}/browse/PROJ-150): Production database connections were exhausted during peak hours. Identified connection pool misconfiguration. **Resolution:** Increased connection pool size and added monitoring alerts.
 
 ---
 
 ### Project Alpha - Week of Jan 19 - Jan 24
 
-**Current Status:** Team has begun addressing architecture decision action items from the recent Architecture Review, with alignment conversations ongoing with the Security team and other engineers. Multiple documentation pieces were created mid-week and are currently under review. Implementation work has started on the identity provider side.
+**Current Status:** Team has begun addressing action items from the Architecture Review, with alignment conversations ongoing. Multiple documentation pieces were created mid-week and are currently under review. Implementation work has started.
 
-**Timeline Update:** {{TEAM_NAME}} team's work is projected to complete by end of February/early March. Full rollout support expected in March.
+**Timeline Update:** Projected to complete by end of February/early March. Full rollout support expected in March.
 
 ---
 ```

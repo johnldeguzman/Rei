@@ -7,7 +7,7 @@ alwaysApply: true
 
 Determines when to activate the agent team for multi-perspective review, without requiring an explicit trigger phrase.
 
-**SKILL LOCATION**: `.cursor/skills/agent-team/SKILL.md` — read this skill before executing.
+**SKILL LOCATION**: `~/.cursor/skills/agent-team/SKILL.md` — read this skill before executing.
 
 ## Auto-Activate (High Confidence)
 
@@ -21,9 +21,41 @@ When auto-activating:
 - Tell the user: "This [PRD/architecture/proposal] touches [relevant domains]. Running it through [selected specialists] for a multi-perspective review."
 - Proceed with the agent team skill workflow immediately
 
+## Auto-Activate: Layered Research
+
+Run layered research mode (not full team review) when the request is a **research or investigation ask that spans multiple systems or has an unknown solution space.**
+
+**High-confidence triggers** (auto-activate):
+- "Research [topic]", "investigate [topic]", "look into [topic]" + the topic clearly involves 2+ systems (e.g., "Auth0 to Splunk", "Kong and backend auth", "SAML federation with customer IdP")
+- "What are our options for [cross-domain problem]?"
+- "Break this down" or "how would we approach [problem]" where the problem spans multiple platforms
+
+**Medium-confidence triggers** (suggest, don't auto-activate):
+- Research ask where it's unclear whether it's single-domain or cross-domain
+- "Can we do X?" where X might have solutions in multiple systems
+- Investigating a problem where the root cause could be in different layers
+
+**Do NOT use layered research for:**
+- Single-domain questions ("how do Auth0 Actions work?") — embedded specialist
+- Reviewing an existing document — full team review
+- Quick factual lookups — answer directly
+
+**Tiebreaker — layered research vs. full team review:**
+- "Research/investigate" + open-ended solution space → layered research
+- Document attached + "review/evaluate/assess" → full team review
+- Vendor evaluation of a single product → full team review. Comparing solutions across a system chain → layered research.
+- Post-mortem / incident analysis → full team review (multi-perspective evaluation of a known event). Investigating a problem with unknown root cause across layers → layered research.
+
+When auto-activating:
+- Tell the user: "This spans [systems]. Running a layered research — mapping the full landscape first, then going deep per domain."
+- Proceed with the layered research workflow in the agent team skill
+
+When suggesting:
+- "This might span multiple systems — want me to run layered research (generalist landscape first, then deep dives)? Or should I go straight to [specialist]?"
+
 ## Suggest (Medium Confidence)
 
-Suggest a team review — but don't auto-activate — when:
+Suggest a full team review — but don't auto-activate — when:
 
 1. **Complex project planning** — the topic involves multiple systems, cross-cutting concerns, or significant risk, but the user hasn't explicitly asked for a review
 2. **Vendor or tool evaluation** — the user is evaluating a third-party tool or service and discussing trade-offs
@@ -45,6 +77,8 @@ These are NOT skill triggers — they apply to **any** conversation where the wo
 | **Rule, skill, or prompt changes** — creating/modifying rules, skills, specialist profiles, or behavioral directives | AI | Review prompt structure, discoverability, compliance patterns, token efficiency, and unintended side effects |
 
 **Pre-flight gate (MANDATORY):** Before executing work that matches any row above — stop. Spawn the specialist. Integrate their recommendations. Only then proceed to execution. Do not skip this step, even if the work feels straightforward.
+
+**Self-check (MANDATORY):** Before responding, check: does this request also match an Auto-Activate trigger (e.g., reviewing a design doc, technical proposal, architecture)? If yes, run the full team review per the skill — not just the single embedded specialist. Do not substitute your own analysis for the specialist. Do not ask permission to run specialists or the resolution loop; the triggers and the workflow are the permission.
 
 This is not a "team review" — it's a pre-flight check.
 
@@ -80,32 +114,14 @@ Note: This section only blocks full multi-agent team reviews. The "Embed in Skil
 
 ## Specialist Selection
 
-### Full team reviews
-
-| Content Type | Specialists |
-|---|---|
-| PRD / Product Spec | Product + Security + Engineering + Ops |
-| Architecture / Design Doc | Engineering + Security |
-| Launch Readiness | Ops + Security + Engineering + Product |
-| Vendor / Tool Evaluation | Product + Security + Engineering |
-| API Design | Security + Engineering |
-| Incident / Post-mortem | Engineering + Ops |
-| Infrastructure Change | Ops + Security |
-| Feature Proposal / RFC | Product + Engineering + Security |
-| Scope / Timeline Review | Product + Engineering |
-| Rule / Skill / Prompt Design | AI + Engineering |
-
-Default to all five if the content spans multiple categories or if unsure.
-
-### Embedded (single specialist per skill)
-
-See the "Embed in Skills" table above — each skill maps to exactly one specialist.
+See the agent-team skill for full specialist selection tables (content type → specialists mapping). Default to all seven if unsure.
 
 ## User Override
 
-The user can always:
+the user can always:
 - **Add specialists**: "also run ops on this"
 - **Remove specialists**: "skip the ops review, just security and engineering"
 - **Skip entirely**: "just give me your take" or "skip the team review"
 - **Request manually**: "run a team review on this" (activates even if trigger conditions aren't met)
+- **Request layered research**: "run layered research on this" or "research this properly" (activates layered research even if trigger conditions aren't met)
 - **Adjust scope**: "just a quick team review, not the full thing" — run Round 1 only, skip Round 2 consideration

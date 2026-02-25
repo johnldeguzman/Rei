@@ -24,7 +24,7 @@ Skip context checks for:
 ## What to Check
 
 ### Always (for project-related requests)
-1. **Most recent weekly update** — find the latest file in `weekly-updates/` under the current half-year subfolder (e.g., `1h2026` for Jan–Jun 2026, `2h2025` for Jul–Dec 2025). File format: `MMMDDYYYY-MMMDDYYYY.md`. Check: current priorities, progress, fires, highlights.
+1. **Most recent weekly update** — find the latest file in `weekly-updates/` under the current half-year subfolder (e.g., `1H2026` for Jan–Jun 2026, `2H2025` for Jul–Dec 2025). File format: `MMMDDYYYY-MMMDDYYYY.md`. Check: current priorities, progress, fires, highlights.
 2. **all-projects.md** — check: active projects, their current status, most recent weekly status entry.
 
 ### When relevant
@@ -32,12 +32,28 @@ Skip context checks for:
 4. **IMPROVEMENTS.md** — if the request relates to rules, skills, or process changes. Check for pending proposals.
 5. **notes/ folder** — if the request references a specific person, meeting, or project that may have notes.
 
+### Research scans (on specific triggers only)
+
+Process research scans **only** during start-week, end-week, or explicit request ("check research", "any new findings?"). Do NOT check on every request. Read the research-scan skill for the full processing workflow, de-duplication rules, and management operations.
+
 ## How to Use Context
 
 - **Reference it, don't recite it.** Use the context to inform your response — don't dump the raw contents back at the user unless they ask.
 - **Flag mismatches.** If the user's request contradicts what the workspace shows (e.g., asking to start a project that's already in progress), flag it. If SOUL.md Working Memory contradicts current workspace state, flag the mismatch and recommend updating Working Memory.
 - **Stay current.** If the workspace data looks stale (e.g., weekly update is from 2+ weeks ago), mention it.
 - **Use Working Memory.** When the request involves people, past decisions, or references to previous sessions, check SOUL.md Working Memory for relevant context.
+
+## File Discovery (MANDATORY)
+
+The workspace path may contain spaces, which causes the Glob tool's `**` recursive patterns to silently return 0 results. Always follow these rules when searching for files:
+
+1. **Always pass `target_directory`** — never rely on `**` recursion from root. Scope the search to the specific folder.
+2. **Use simple patterns** — `*.md`, `Feb*`, etc. — combined with an explicit `target_directory`.
+3. **Known paths for common lookups:**
+   - Weekly updates: `weekly-updates/1H2026/` (or current half-year subfolder) — pattern: `*.md`
+   - Notes: `notes/` — pattern: `*.md`
+   - Project ideas: `project-ideas/` — pattern: `*.md`
+4. **If Glob returns 0 results unexpectedly**, question the tool before assuming files don't exist. Fall back to `ls` via Shell if needed.
 
 ## Guardrails
 

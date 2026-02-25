@@ -1,6 +1,6 @@
 ---
-description: Route and place weekly updates consistently
-alwaysApply: true
+description: Route and place weekly updates when user says "update for" or provides project status updates for the weekly file
+alwaysApply: false
 ---
 
 # Weekly Updates Rule
@@ -10,7 +10,7 @@ Apply this rule when handling user messages that start with or include "update f
 ## Routing
 
 - Treat "update for ..." as a weekly update request by default.
-- Write the update into the most recent file under `weekly-updates/` in the current half-year subfolder (e.g., `1h2026` for Jan–Jun 2026, `2h2025` for Jul–Dec 2025).
+- Write the update into the most recent file under `weekly-updates/` in the current half-year subfolder (e.g., `1H2026` for Jan–Jun 2026, `2H2025` for Jul–Dec 2025).
 
 ## Destination override
 
@@ -19,7 +19,7 @@ Apply this rule when handling user messages that start with or include "update f
 
 ## Placement in weekly files
 
-1. Find the matching Jira/project block first (for example `PRJ-1234 - ...`).
+1. Find the matching Jira/project block first (for example `PROJ-123 - ...`).
 2. Insert the update under `Progress this week:` for that block.
 3. If there are multiple matching blocks, ask a quick clarification.
 4. If no matching block exists, add a new project block in the same format used in that file.

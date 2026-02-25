@@ -1,0 +1,76 @@
+---
+description: Capture and add project ideas to the backlog when user says "add this as a project idea", "put this on the backlog", "this could be a project", or similar
+alwaysApply: false
+---
+
+# Project Ideas Rule
+
+Capture new project ideas and add them to the backlog file with enough detail for future triage and prioritization.
+
+**TRIGGER**: Explicit phrases like "add this as a project idea", "add to project backlog", "capture this as a project", "put this on the backlog", "log this as a project idea." For softer phrases ("this could be a project", "this seems like a project"), ask: "Want me to add this to the project backlog?"
+
+## Routing
+
+- Write new ideas to the project ideas backlog file in `project-ideas/`.
+- Insert as a new row in the projects table, appended after the last existing row.
+- Do NOT route to `all-projects.md` — that file tracks active projects only.
+
+## Field capture
+
+Every project idea captures these fields. Extract from conversation context when available. Only prompt for **Project Summary** if it can't be inferred — use "TBD" for other missing fields rather than interrogating the user.
+
+### Required fields
+
+| Field | What to capture | If missing |
+|---|---|---|
+| **Project Summary** | One-line description of what the project is. Include Jira/Confluence links if they exist. | Ask: "What should the project summary be?" |
+| **Impact / Why** | Why this matters — compliance, risk, velocity, cost, user impact. One sentence. | Infer from context or use "TBD" |
+| **Approx Size** | Rough effort: S, M, L, or compound (Small-Medium, Medium-Large). Not dates. | Use "TBD — needs sizing" |
+| **Dependencies / Blockers** | External teams, people, tools, or prerequisites that affect feasibility or timing. | Leave blank if none apparent |
+
+### Optional fields (include when naturally available)
+
+| Field | What to capture |
+|---|---|
+| **Driver / Source** | Who raised this — a person, team, customer, compliance requirement, or conversation reference |
+| **Links** | Jira ticket keys, Confluence pages, PRs, or external references. Format as markdown links in the Project Summary cell. |
+
+## Table format
+
+Match the existing table structure:
+
+```
+| **Project Summary** | **Impact** | **Notable Dependencies/Approx Size** |
+```
+
+- **Project Summary** cell: Name + links (Jira/Confluence) if available
+- **Impact** cell: One-sentence "why"
+- **Notable Dependencies/Approx Size** cell: Dependencies + size combined (matching existing convention). Include driver/source here if provided.
+
+## Duplicate detection (MANDATORY)
+
+Before adding a new row, scan the existing table for entries that cover the same or very similar scope.
+
+- If a close match exists: "There's already a backlog entry for **[existing summary]**. Want me to add this as a new entry, merge into the existing one, or skip?"
+- Use Project Summary keywords for matching — don't over-match on generic terms.
+
+## Content style
+
+- Keep entries concise — each cell should be scannable in under 15 seconds.
+- Use `<br>` for line breaks within table cells (matching existing format).
+- Preserve the existing table structure and formatting conventions.
+
+## Integration
+
+- **`jira-project` skill**: This rule captures ideas. When the idea is later ready for planning, the `jira-project` skill creates the full Jira project. After adding an idea, optionally mention: "When you're ready to plan this, say 'create a project' and I'll set it up in Jira."
+- **`projectPlanning.mdc`**: Does not apply here — no dates are set during idea capture.
+- **`all-projects.md`**: Not touched by this rule. Ideas graduate to `all-projects.md` only when they become active projects via `jira-project`.
+
+## Guardrails
+
+- Do NOT trigger on "create a project" — that belongs to the `jira-project` skill.
+- Do NOT invent impact, size, or dependencies — use blanks or "TBD" when information isn't available.
+- Do NOT add tasks, bugs, or one-off chores as project ideas — these are multi-step initiatives only. If unclear, ask.
+- Do NOT remove or rewrite existing backlog rows unless explicitly asked.
+- Do NOT set dates or update `project-timeline.md` — idea capture is pre-planning.
+- If multiple ideas come up in one message, add each as a separate row and confirm before writing.

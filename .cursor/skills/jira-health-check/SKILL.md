@@ -5,7 +5,7 @@ description: Scan Jira for project hygiene issues — stale tickets, missing dat
 
 # Jira Health Check
 
-Scans team Jira tickets for hygiene issues. Resolve Jira project key and custom field IDs from [shared/config.md](../shared/config.md). and produces a concise health report. Catches problems before they become fires.
+Scans team Jira tickets for hygiene issues. Resolve Jira project key and custom field IDs from [shared/config.md](../shared/config.md) and produces a concise health report. Catches problems before they become fires.
 
 ## Decision Flow
 

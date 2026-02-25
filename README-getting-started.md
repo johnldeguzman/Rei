@@ -223,7 +223,6 @@ Skills are multi-step workflow definitions in `.cursor/skills/`. Complex skills 
 | `start-week` | "start my week" | Core |
 | `end-week` | "end my week" | Core (Jira/Confluence optional) |
 | `agent-team` | Auto-detected or manual | Core |
-| `performance-reviews` | "create performance reviews" | Core (Jira optional) |
 | `jira-project` | "create a project" | Full |
 | `timeline-sync` | "sync timeline" | Full |
 | `done-projects` | Project status → Done | Full |
@@ -275,12 +274,9 @@ By default, Rei only runs in the workspace where its rules and skills live. If y
 
 ### How it works
 
-1. Rename the workspace directories so Cursor doesn't auto-load them locally:
-   - `.cursor/rules/` → `.cursor/rules-src/`
-   - `.cursor/skills/` → `.cursor/skills-src/`
-2. Create global directories and symlink each file/folder:
-   - `~/.cursor/rules/*.mdc` → symlinks to `.cursor/rules-src/*.mdc`
-   - `~/.cursor/skills/*` → symlinks to `.cursor/skills-src/*`
+1. Create global directories and symlink each file/folder:
+   - `~/.cursor/rules/*.mdc` → symlinks to `.cursor/rules/*.mdc`
+   - `~/.cursor/skills/*` → symlinks to `.cursor/skills/*`
 3. Symlink `SOUL.md` to your home directory: `~/SOUL.md`
 
 This gives you single-load in every workspace (no token duplication) with a single source of truth in this repo.

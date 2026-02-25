@@ -22,16 +22,16 @@
 ## Example Entry
 
 ```markdown
-## Example Project (EP)
+## Project Alpha (ALPHA)
 
-**Confluence URL:** https://{{ATLASSIAN_SITE}}/wiki/spaces/ID/pages/123456789/Example+Project+EP
+**Confluence URL:** https://{{ATLASSIAN_SITE}}/wiki/spaces/TEAM/pages/123456789/Project+Alpha
 
-**Jira Project Ticket:** [PRJ-1001 - Example Project (EP)](https://{{ATLASSIAN_SITE}}/browse/PRJ-1001)
+**Jira Project Ticket:** [PROJ-100 - Project Alpha (ALPHA)](https://{{ATLASSIAN_SITE}}/browse/PROJ-100)
 
 **Status:** In Progress
 
 **Jira Epic Tickets:**
-- [PRJ-1002 - Discovery](https://{{ATLASSIAN_SITE}}/browse/PRJ-1002) (Status: In Progress)
+- [PROJ-101 - Discovery](https://{{ATLASSIAN_SITE}}/browse/PROJ-101) (Status: In Progress)
 
 ---
 ```
@@ -47,7 +47,7 @@
 
 **Customer:** [Customer name if available]
 
-**Project Key:** [PROJECT-KEY] (e.g., PRJ-1001)
+**Project Key:** [PROJECT-KEY]
 
 ## Epics
 

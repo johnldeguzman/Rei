@@ -63,7 +63,6 @@ All paths are **relative to workspace root**. Skills resolve these against the C
 | done-projects.md | `done-projects.md` |
 | project-timeline.md | `project-timeline.md` |
 | weekly-updates | `weekly-updates/` (organized by half-year subfolders: `1h2026`, `2h2025`, etc.) |
-| performance-reviews | `performance-reviews/` |
 | notes | `notes/` |
 
 ---
