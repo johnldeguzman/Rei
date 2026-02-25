@@ -61,16 +61,16 @@ Before updating project-timeline.md, check for scheduling conflicts:
    ```
    Apr       May       Jun       Jul
    |---------|---------|---------|---------|
-    Project Beta (PRJ-1002)
+    Project Alpha (PROJ-100)
     ████████████████████
     Apr 1 ──── May 29
-              NEW PROJECT (ID-XXXX)
+              NEW PROJECT (PROJ-XXX)
               ████████████████████
               May 1 ──── Jun 30
 
     Overlap zones:
     ══════════╗
-              ║ Project Beta + NEW: May 1 – May 29 (29 days)
+              ║ Alpha + NEW: May 1 – May 29 (29 days)
               ╚══════════
    ```
 

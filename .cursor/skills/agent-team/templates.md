@@ -23,6 +23,7 @@ Each specialist writes findings to `.agent-team/{type}-findings.md` using this f
 
 - **Finding**: {what the issue is}
 - **Where**: {section/component/area of the source material}
+- **Evidence**: {what you checked to verify — command output, file contents, or "Unverified: [reason]"}
 - **Why it matters**: {impact if not addressed}
 - **Recommendation**: {specific action}
 
@@ -32,6 +33,7 @@ Each specialist writes findings to `.agent-team/{type}-findings.md` using this f
 
 - **Finding**: {what the issue is}
 - **Where**: {section/component/area of the source material}
+- **Evidence**: {what you checked to verify — command output, file contents, or "Unverified: [reason]"}
 - **Why it matters**: {impact if not addressed}
 - **Recommendation**: {specific action}
 
@@ -44,7 +46,7 @@ Each specialist writes findings to `.agent-team/{type}-findings.md` using this f
 - **Why it matters**: {impact if not addressed}
 - **Recommendation**: {specific action}
 
-{repeat for each note, or "None" if none}
+{repeat for each note, or "None" if none. Evidence field optional for Notes — include if you verified something.}
 
 ## Questions for Other Specialists
 

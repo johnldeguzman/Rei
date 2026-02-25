@@ -9,10 +9,11 @@ Orchestrates parallel specialist sub-agents for multi-perspective analysis. Agen
 
 ## When This Activates
 
-The agent team operates in two modes:
+The agent team operates in three modes:
 
 1. **Full team review** — Multi-specialist analysis for PRDs, architecture docs, launch readiness, etc. Triggered by the `agentTeam.mdc` rule or manual request.
 2. **Embedded specialist** — A single specialist is woven into an existing skill workflow (e.g., PM during end-week, engineer during technical planning). Triggered by the `agentTeam.mdc` skill-integration mapping.
+3. **Layered research** — Generalist-first investigation for cross-domain problems. Maps the full landscape before going deep. Triggered by research asks that span multiple systems or have an unknown solution space.
 
 ## Agency — Think, Recommend, Act
 
@@ -36,11 +37,13 @@ Every specialist output must reach at least **Recommend**. Observations without 
 
 ### Who executes
 
-Specialists recommend. **I execute.** When a recommendation is approved, I carry it out directly — I have full workspace context, tool access, and session continuity. No additional agent is spawned for execution.
+After analysis, execution is split based on the work:
 
-The division is clear:
-- **Specialists** = thinking partners. They provide perspective, catch blind spots, and propose actions.
-- **Rei** = the operator. I present recommendations, get approval, and execute with all available tools (Jira, Confluence, file writes, etc.).
+- **Rei directly** — judgment calls, interdependent changes, anything requiring session context or behavioral rule edits.
+- **Worker agents** — isolated, well-scoped, mechanical tasks that can be fully described in a prompt. Dispatched in parallel with write access. Output is reviewed by Rei before presenting to the user.
+- **User** — decisions that require human judgment or external context.
+
+The key principle: **analysis is read-only, execution is planned and delegated.** See Step 4 (Execution Planning) for the full workflow.
 
 ### Specialist review of execution
 
@@ -87,7 +90,9 @@ Some workflows benefit from a specialist perspective without the overhead of a f
 | **timeline-sync** | Product Manager | Analyze timeline for scheduling conflicts, unrealistic durations, missing buffers. Recommend adjustments. |
 | **jira-health-check** | Product Manager | Interpret hygiene findings in project context. Prioritize which issues actually matter vs. noise. |
 | **jira-project** (create) | Engineering | Review project structure, milestone breakdown, and technical scoping. Flag missing epics or unrealistic phasing. |
+| **Technical implementation** (scripts, automation, infra, system changes) | Engineering | Review the implementation plan before execution. Catch environment assumptions, path issues, missing error handling, dependency risks, and integration gaps. Runs between plan and execute. |
 | **Any technical discussion** | Engineering | When the conversation involves code, architecture, or technical decisions — bring engineering perspective on feasibility, trade-offs, and implementation approach. |
+| **Code review** | Engineering | Review completed code against the plan, coding standards, and best practices. Uses `subagent_type: "code-reviewer"` instead of `generalPurpose`. |
 | **Rule, skill, or prompt changes** | AI | Review prompt structure, directive clarity, compliance patterns, token efficiency, and discoverability. Catch ambiguity, redundancy, and behavioral edge cases before deploying. |
 
 ### How embedded mode works
@@ -111,11 +116,16 @@ You are a {specialist_type} specialist embedded in a {skill_name} workflow.
 ## Context
 {relevant data from the skill — e.g., weekly progress, timeline, Jira results}
 
+## Tool Access — Verify, Don't Guess
+You have full tool access: read files, run shell commands (read-only), search the codebase. You also have **GitHub CLI access** (`gh`) with `repo` scope across the org — use it to verify against actual source code, not just the local workspace. Your profile includes a "Verification" section — use it. When making a claim about the state of something, check it first.
+
 ## Your Task
 Review this context through your specialist lens. Provide:
 1. 3-5 specific, actionable recommendations (not observations — actions)
 2. For each: what to do, why it matters, and suggested priority (high/medium/low)
 3. Flag anything that needs immediate attention vs. next-week items
+4. For high-priority items, include evidence from tool verification where applicable
+5. If you identify an unknown you have the expertise and tools to resolve, investigate it — don't leave it as an open question when you can answer it
 
 Keep it concise. This feeds directly into the user's workflow output.
 ```
@@ -127,6 +137,205 @@ Keep it concise. This feeds directly into the user's workflow output.
 - **Integrated output.** The specialist's recommendations appear inside the skill's normal output (e.g., in the weekly summary, not in a separate file).
 - **No `.agent-team/` directory.** Embedded mode doesn't create findings files — the output goes directly into the skill's flow.
 - **Escalation path.** If the embedded specialist surfaces something that needs deeper multi-perspective analysis, recommend a full team review: "This warrants a deeper look — want me to run the full team on it?"
+
+---
+
+## Layered Research Mode
+
+For cross-domain problems where the solution space isn't known upfront. Instead of jumping straight to a domain specialist, start with a generalist who maps the full landscape, then go deep per domain, then synthesize.
+
+### When to use layered research (vs. other modes)
+
+| Signal | Use this mode |
+|---|---|
+| Problem spans multiple systems (e.g., Auth0 → Splunk, Kong → backend → Auth0) | Yes |
+| Solution space is open-ended ("what are our options for X?") | Yes |
+| Research ask where you don't know which domains contain the answer | Yes |
+| "Investigate this", "look into this", "research this" + cross-domain | Yes |
+| Single-domain, known system ("how do Auth0 Actions work?") | No — use embedded specialist |
+| Reviewing an existing document for quality | No — use full team review |
+| Quick factual question | No — answer directly |
+
+### Architecture
+
+```
+Phase 1: Landscape    Phase 2: Deep Dives    Phase 3: Synthesis
+                      ┌─ Domain A agent ─┐
+Generalist agent ────►├─ Domain B agent ─┤────► Synthesize findings
+                      └─ Domain C agent ─┘
+```
+
+### Workflow
+
+#### Phase 1: Landscape Mapping
+
+Spawn a single generalist agent whose job is to go **wide, not deep**. They map the full problem space without solving anything.
+
+**Generalist agent prompt:**
+
+```
+You are a generalist research analyst. Your job is NOT to solve the problem — it's to map the full landscape of where solutions might live.
+
+## Problem Statement
+{user's research question or problem description, with full context from the conversation}
+
+## Your Task — Map, Don't Solve
+
+1. **Identify all systems, platforms, and tools involved** in this problem — both the ones explicitly mentioned and adjacent ones that might contain solutions. Think about the full data/workflow chain from end to end.
+
+2. **For each system/domain, list solution categories** — what kinds of approaches exist on that side? Name them specifically (e.g., "Splunk Ingest Actions" not just "Splunk-side processing"). Use web search to discover options you're not already aware of.
+
+3. **Assess each area:**
+   - Quick answer possible? (Can be resolved with a web search or doc lookup)
+   - Needs deep investigation? (Requires domain expertise, trade-off analysis, or verification)
+   - Unknown? (Not sure if solutions exist here — flag for exploration)
+
+4. **Recommend investigation areas** — for each area that needs a deep dive:
+   - What specific questions should be answered?
+   - What domain expertise is needed?
+   - What tools/sources should be checked?
+
+## Rules
+- **MANDATORY: Perform at least one web search per system/domain before finalizing your output.** You are mapping what EXISTS, not only what you already know. Failure to search is the exact failure mode this workflow exists to prevent.
+- Cast a WIDE net. The whole point is to avoid tunnel vision.
+- Think about the full chain: source → transport → processing → destination. Solutions can live at any layer.
+- For each system, list **at least 2 specific named solutions or approaches** — not generic categories.
+- DO NOT go deep on any single area. If you find yourself writing more than 2-3 sentences about one solution, stop — that's Phase 2's job.
+
+## Output Format
+
+### Problem Landscape
+
+**Systems involved:** [list all systems in the chain]
+
+### Solution Map
+
+For each system/domain:
+
+#### {System/Domain Name}
+- **Solution categories:** [list at least 2 specific named solutions/approaches per system]
+- **Assessment:** Quick answer / Needs deep dive / Unknown
+- **If deep dive needed:**
+  - Questions to answer: [specific questions]
+  - Expertise needed: [domain type]
+  - Sources to check: [docs, repos, tools]
+
+### Recommended Investigation Plan
+
+[Ordered list of deep dives to run, prioritized by: (1) Unknown areas first, (2) Areas needing deep dive, (3) Explicit mentions in the problem statement. Group by domain.]
+
+### Explicitly Considered and Ruled Out (REQUIRED)
+
+[Systems or approaches you looked at but don't think are relevant, and why. This prevents Phase 2 from re-covering dead ends. If nothing was ruled out, state "N/A — all identified systems were relevant."]
+```
+
+**Use `subagent_type: "generalPurpose"`.** For the model: use `model: "fast"` when the problem has clearly named systems and a narrow scope. Use the default model (no `model` parameter) when the problem is vague, spans many domains, or has an unknown solution space — broader problems need stronger reasoning to avoid shallow mapping.
+
+#### Phase 2: Focused Deep Dives
+
+Based on the generalist's landscape map, spawn targeted research agents for each domain area that needs investigation. Run in parallel (max 4).
+
+**Prioritization (when >4 areas need deep dives):** If the generalist recommends more than 4 investigation areas, prioritize by: (1) "Unknown" areas first — these are the biggest blind spots, (2) "Needs deep dive" areas explicitly mentioned in the problem statement, (3) Areas with dependencies on other areas. Defer remaining areas and tell the user what was deferred.
+
+**Selecting deep-dive agents:**
+
+| Generalist recommends | Agent to spawn |
+|---|---|
+| Area maps to an existing specialist domain (Auth0, security, ops) | Use that specialist profile |
+| Area is a general technology domain (Splunk, Kong, AWS) | Use a general researcher with focused scope |
+| Area flagged as "quick answer" | Skip agent — answer directly from the generalist's findings or a quick web search |
+
+**Deep-dive agent prompt:**
+
+```
+You are a focused researcher investigating one domain area of a larger cross-domain problem.
+
+## Problem Context
+{original problem statement}
+
+## Your Investigation Area
+{specific domain/system from the generalist's map}
+
+## Questions to Answer
+{specific questions from the generalist's investigation plan}
+
+## Full Investigation Plan (from landscape mapping)
+{the generalist's complete Recommended Investigation Plan — so you see where your area fits in the bigger picture}
+
+## What Other Domains Are Being Investigated
+{list of other parallel investigations — so you know the boundaries of YOUR scope}
+
+## What's Already Known
+{any quick answers or ruled-out approaches from the generalist — don't re-cover these}
+
+## Your Task
+1. Answer the specific questions for your domain with depth and evidence
+2. For each solution you find: explain how it works, what it covers, what it doesn't cover, and any caveats
+3. Use web search and documentation to verify — don't speculate
+4. If you discover solutions that cross into another domain's territory, note them but don't deep-dive — flag for synthesis
+
+## Output Format
+
+### {Domain} — Deep Dive Findings
+
+**Solutions found:**
+
+#### {Solution 1 Name}
+- **How it works:** [concise explanation]
+- **What it covers:** [specific to the original problem]
+- **What it doesn't cover:** [gaps, limitations]
+- **Caveats:** [gotchas, prerequisites, cost]
+- **Evidence:** [links, docs, verified claims]
+
+[Repeat for each solution]
+
+**Cross-domain notes:** [anything that touches other investigation areas]
+
+**Recommendation:** [which solution in this domain looks strongest and why]
+```
+
+**Use `subagent_type: "generalPurpose"`.** For agents using an existing specialist profile, use that profile's designated model. For general researchers, use the default model.
+
+#### Phase 3: Cross-Domain Synthesis
+
+After all deep dives complete, synthesize findings across domains. This is where the real value lives — solutions in one domain may eliminate the need for complexity in another.
+
+1. Read all deep-dive outputs
+2. Cross-reference: do different domains surface the same solution? Does a simple solution in domain B make a complex solution in domain A unnecessary?
+3. Build a **comparison matrix** of all viable solutions across all domains
+4. Present to the user:
+
+```
+**Research: {topic}**
+
+**Landscape:** {N} domains investigated — {list}
+
+**Top finding:** {the best approach and why — often the simplest one that was only visible because we looked across all domains}
+
+**Options comparison:**
+
+| Approach | Domain | Complexity | Coverage | Infrastructure |
+|---|---|---|---|---|
+| {option} | {which system} | {Low/Med/High} | {what it handles} | {what's needed} |
+
+**Recommendation:** {which option, with reasoning that references the cross-domain view}
+
+**Detailed findings saved to:** {location if written to file, or "available on request"}
+```
+
+### Rules for layered research
+
+- **Generalist goes wide, specialists go deep.** Never let the generalist solve the problem — their job is mapping, not analysis.
+- **Phase 2 agents don't overlap.** Each deep-dive has a clear domain boundary. If something crosses domains, flag it for synthesis.
+- **Skip unnecessary depth.** If the generalist flags an area as "quick answer," don't spawn an agent — resolve it directly.
+- **2 phases of depth is usually enough.** Only go to a third level if a deep-dive agent flags a sub-area that needs further investigation and the user confirms.
+- **Web search is mandatory in Phase 1.** The generalist MUST search — the whole point is discovering what you don't already know. Failure to search is the exact failure mode this mode exists to prevent.
+- **Present the landscape to the user before deep dives** if the problem is ambiguous. For clear problems, proceed directly.
+- **Escalation to full team review.** If research findings produce a proposal or architecture that needs multi-perspective evaluation, suggest running a full team review on the output.
+
+### Cleanup
+
+Layered research doesn't write to `.agent-team/` by default — findings are synthesized directly in the conversation. If the user asks to save findings, write to `notes/{topic}-research.md`.
 
 ---
 
@@ -149,6 +358,32 @@ Workspace Root
 
 Agents communicate indirectly: each writes structured findings to their designated file. I read all findings between rounds and inject cross-references into follow-up prompts.
 
+## Model Configuration
+
+Each specialist runs on a designated model. Read the **Model** field from the specialist's profile (`specialists/{type}.md`) and pass it when spawning the agent via the Task tool's `model` parameter.
+
+| Specialist | Model | Rationale |
+|---|---|---|
+| Engineering | `claude-4.6-opus-high` | Deep technical reasoning, architecture analysis |
+| Security | `claude-4.6-opus-high` | Thorough threat modeling, compliance review |
+| EM | `claude-4.6-opus-high` | Nuanced organizational and people assessment |
+| AI | `codex` | Prompt engineering, directive analysis |
+| Product Manager | `codex` | Product strategy, scope and delivery review |
+| Ops | `codex` | Operational readiness, deployment assessment |
+
+When spawning specialist agents, always set the `model` parameter to match this table. The model is also declared in each specialist's profile as the source of truth — if the profile and this table ever conflict, the profile wins.
+
+### Subagent Type Routing
+
+All specialists use `subagent_type: "generalPurpose"` by default. Engineering has a context-dependent override:
+
+| Context | Subagent Type | When |
+|---|---|---|
+| Full team review, embedded analysis, technical discussion | `generalPurpose` | Default — needs write access for findings files and full tool access for verification |
+| Code review | `code-reviewer` | When reviewing completed code against a plan or coding standards (e.g., "review this code", "code review", post-implementation review) |
+
+The specialist's profile declares its available subagent types. When spawning, match the context to the correct type.
+
 ## Specialist Selection
 
 Not every review needs all specialists. Select based on content:
@@ -164,9 +399,12 @@ Not every review needs all specialists. Select based on content:
 | Infrastructure Change | Ops + Security |
 | Feature Proposal / RFC | Product + Engineering + Security |
 | Scope / Timeline Review | Product + Engineering |
+| Code Review | Engineering (`code-reviewer`) |
 | Rule / Skill / Prompt Design | AI + Engineering |
+| Team / Process / Staffing Change | EM + Product |
+| Cross-Team Collaboration Model | EM + Engineering |
 
-Default to all five if unsure. For purely technical docs with no user-facing impact, skip Product.
+Default to all specialists if unsure. For purely technical docs with no user-facing impact, skip Product. For non-team/process topics, skip EM.
 
 ## Workflow
 
@@ -178,13 +416,19 @@ Default to all five if unsure. For purely technical docs with no user-facing imp
    - If the user shares a Jira ticket → fetch it
    - If the user pastes content → use directly
 2. Create `.agent-team/` directory at workspace root
-3. Write the source material to `.agent-team/input.md`
+3. Write the source material to `.agent-team/input.md`. If the input includes guiding questions for specialists, run the **framing quality check** before finalizing:
+   - Do the questions match the ambition level of the source concept?
+   - **Architectural** concepts (new structures, systems, patterns, approaches) require architectural questions — "what would this look like?", "design this system", "how should this work?" Do not ask tactical questions ("which existing flags to flip", "what to move where") until the architectural design is established.
+   - **Tactical** concepts (refactors, config changes, flag toggles) can use tactical questions directly.
+   - If the source proposes a new design but the questions only ask about tweaking existing mechanisms, rewrite the questions.
 4. Determine which specialists are relevant (see Specialist Selection table)
 5. Tell the user which specialists are being activated and why
 
-### Step 1: Round 1 — Independent Analysis (Parallel)
+### Step 1: Round 1 — Independent Analysis (Non-Blocking, Parallel)
 
-Spawn specialist sub-agents in parallel via the Task tool (max 4, one per specialist). Each agent receives:
+Spawn specialist sub-agents in parallel via the Task tool (max 4, one per specialist). **Analysis agents run in the background** — do not block waiting for them. Continue preparing for synthesis (e.g., reading related files, checking workspace state) while they work. Collect results when all agents complete.
+
+Each agent receives:
 
 - The source material content (inline in the prompt, NOT a file reference — agents must have the full content)
 - Their specialist profile (read from `specialists/{type}.md` and included inline)
@@ -202,8 +446,25 @@ You are a {specialist_type} specialist conducting a review.
 ## Source Material to Review
 {full content of .agent-team/input.md}
 
+## Tool Access — Verify, Don't Guess
+You have full tool access: read files, run shell commands (read-only), search the codebase, and browse the workspace. USE THEM.
+
+You also have **GitHub CLI access** (`gh`). The user is authenticated and has `repo` scope across the org. Use `gh` to verify claims against actual source code, configuration files, and repo structure — don't limit yourself to the local workspace.
+
+Your profile includes a "Verification" section with specific checks for your domain. For every Critical or Warning finding, verify your claim using tools and include the evidence in the "Evidence" field. Don't speculate when you can check.
+
+Examples:
+- Checking a path exists: run `ls -la /path/to/thing` and include the output
+- Checking a binary is installed: run `which binary-name`
+- Checking config correctness: read the actual file and quote the relevant section
+- Checking project state: read `all-projects.md` or query workspace files
+- Checking source code on GitHub: run `gh search code "pattern" --owner={{GITHUB_ORG}}` or `gh api repos/{owner}/{repo}/contents/{path} --jq '.content' | base64 -d`
+- Listing repos or files: run `gh search repos "keyword" --owner={{GITHUB_ORG}}` or `gh api repos/{owner}/{repo}/git/trees/main --jq '.tree[].path'`
+
+If you cannot verify something (no access, remote dependency, needs runtime testing), say "Unverified: [reason]" in the Evidence field.
+
 ## Your Task
-Analyze the source material through your specialist lens. Be specific — reference exact sections, quotes, or gaps. Flag severity levels.
+Analyze the source material through your specialist lens. Be specific — reference exact sections, quotes, or gaps. Flag severity levels. Verify findings with tools wherever possible. If you identify an unknown that you have the expertise and tools to resolve, investigate it and include your findings — don't leave it as an open question when you can answer it.
 
 ## Output
 Write your complete findings to {absolute_path}/.agent-team/{type}-findings.md
@@ -212,7 +473,7 @@ Use this exact format:
 {template from templates.md — Specialist Findings Format section}
 ```
 
-**Use `subagent_type: "generalPurpose"` for each specialist agent.** Do NOT use "explore" — specialists need full write access.
+**Use `subagent_type: "generalPurpose"` for each specialist agent.** Do NOT use "explore" — specialists need full write access and tool access for verification. **Set the `model` parameter per the Model Configuration table** (e.g., `model: "claude-4.6-opus-high"` for Engineering, `model: "codex"` for AI).
 
 ### Step 2: Resolution Loop — Cross-Specialist Conversation
 
@@ -224,6 +485,9 @@ After Round 1, specialists may have raised questions for each other (in their "Q
 2. Collect every "Questions for Other Specialists" entry across all findings
 3. Build a question map: `{target_specialist: [{question, asked_by, context}]}`
 4. If the question map is empty → skip to Step 3 (synthesis)
+5. **STOP gate (MANDATORY):** Before proceeding to Step 3, explicitly list every cross-specialist question found. Confirm:
+   - [ ] Listed all questions from all findings
+   - [ ] If the list is non-empty, proceed to Step 2b — do not rationalize skipping ("the answer is obvious", "synthesis will cover it", "it's a minor question", "running 2b would be redundant"). Even a short "see my Round 1 finding" reply counts as running 2b.
 
 #### 2b: Resolution Round
 
@@ -240,6 +504,9 @@ Each resolution agent receives:
 You are a {specialist_type} specialist in a multi-specialist review.
 Other specialists have raised questions for you based on their review.
 
+## Your Lens
+{full content of specialists/{type}.md}
+
 ## Your Round 1 Findings
 {their findings file content}
 
@@ -252,8 +519,11 @@ Other specialists have raised questions for you based on their review.
 Context from their findings:
 {relevant excerpt from asker's findings}
 
+## Tool Access — Verify, Don't Guess
+You have full tool access. If a question can be answered by checking the filesystem, running a command, or reading a file — do it. Include evidence in your answers.
+
 ## Your Task
-1. Answer each question specifically and concisely
+1. Answer each question specifically and concisely — verify with tools where possible
 2. If your answers change any of your Round 1 findings, note the updates
 3. If answering reveals NEW questions for other specialists, include them
 4. Write your responses to {absolute_path}/.agent-team/{type}-resolution-r{round}.md
@@ -266,8 +536,9 @@ Context from their findings:
 After resolution agents complete:
 1. Read all resolution files
 2. Check if any responses raised NEW cross-specialist questions
-3. If yes → run another resolution round (2b) with only the newly-questioned specialists
-4. If no → proceed to synthesis
+3. **If questions target an existing specialist** → run another resolution round (2b) with only the newly-questioned specialists
+4. **If questions target a NEW specialist not in the current review** → ask the user: "Resolution raised questions for [specialist] who wasn't part of this review. Want me to bring them in?" Only spawn the new specialist if the user approves.
+5. If no new questions → proceed to synthesis
 
 #### 2d: Resolution Limits
 
@@ -275,6 +546,7 @@ After resolution agents complete:
 - If questions remain unresolved after 4 rounds, surface them as open questions in the synthesis
 - Each resolution round should have fewer agents than the previous (converging, not expanding)
 - If a resolution round produces MORE questions than the previous round, stop and surface — the review needs human input
+- **New specialists added during resolution** count toward the round limit but not the convergence check (they're additive by design)
 
 ### Step 3: Synthesis and Presentation
 
@@ -305,6 +577,71 @@ In the chat message to the user, present ONLY:
 - Chat summary should be scannable in under 30 seconds
 - Use the file for detail, use the chat for the headline
 - If the user wants more detail, they can open the file or ask
+
+### Step 4: Execution Planning
+
+After synthesis, if the review produced actionable recommendations, plan who executes what before proceeding.
+
+#### 4a: Categorize Each Action
+
+For each recommended action from the synthesis, classify it:
+
+| Category | Criteria | Who Executes |
+|----------|----------|--------------|
+| **Delegate** | Isolated, well-scoped, fully describable without session context. No dependencies on other actions. | Worker agent (write access) |
+| **Do myself** | Requires session context, involves judgment calls, interdependent with other changes, or affects my own behavioral rules. | Rei directly |
+| **Needs input** | Can't proceed without a user decision or clarification. | User (ask first) |
+
+#### 4b: Present Execution Plan
+
+Present the plan to the user before executing:
+
+```
+Execution plan:
+- **I'll handle:** [list — judgment calls, interdependent changes]
+- **Delegating to workers:** [list — isolated, mechanical fixes]
+- **Needs your input:** [list — decisions only you can make]
+
+Proceed?
+```
+
+#### 4c: Dispatch and Execute (Parallel)
+
+1. **Dispatch worker agents as background tasks** (max 4) for delegated tasks. Each worker gets:
+   - The specific file(s) to edit
+   - The exact change to make (before/after or clear instructions)
+   - Relevant context from the synthesis (not the full review — just what they need)
+   - `readonly: false` — workers have write access
+   - `subagent_type: "generalPurpose"`
+   - Workers run in the background — do not block waiting for them
+2. **Execute own tasks immediately** while workers run in parallel
+3. **Check worker results** after own tasks complete — read modified files to verify changes
+
+#### 4d: Review Worker Output
+
+After workers complete:
+1. Read each modified file and verify the change is correct
+2. Check for unintended side effects (broken references, formatting issues)
+3. If a worker's output needs correction, fix it directly — don't re-dispatch
+4. If a worker failed, do the task myself and note it
+
+#### 4e: Present Results
+
+Summarize what was done:
+```
+Completed:
+- [x] [action] — [who did it]
+- [x] [action] — [who did it]
+- [ ] [action] — needs your input: [question]
+```
+
+#### Execution planning rules
+
+- **Always present the plan before executing.** No silent delegation.
+- **Workers get minimal context.** Only what's needed for their specific task — not the full synthesis or session history.
+- **Review is mandatory.** Never present worker output to the user without checking it first.
+- **Fallback is me.** If a worker fails or produces bad output, I do the task myself. Don't re-dispatch.
+- **Skip this step for embedded mode.** Embedded specialists are lightweight consultations — execution planning is for full team reviews only.
 
 ### Step 5: Cleanup
 
@@ -363,6 +700,10 @@ In the chat message to the user, present ONLY:
 - [ ] Resolution converged (fewer questions each round) or hit round limit
 - [ ] Synthesis file written to `.agent-team/synthesis.md` (readable, structured)
 - [ ] Chat summary presented (verdict, top 3, top action, link to file)
+- [ ] Execution plan presented and approved by user (if actions exist)
+- [ ] Worker agents dispatched for delegated tasks (readonly: false)
+- [ ] Worker output reviewed before presenting to user
+- [ ] Results summary presented with completion status
 - [ ] Cleanup offered (or auto-cleaned after conversation moved on)
 
 See [templates.md](templates.md) for output format templates.

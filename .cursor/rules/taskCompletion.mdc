@@ -1,5 +1,6 @@
 ---
-alwaysApply: true
+description: Mark tasks as complete using checkbox + strikethrough syntax when user asks to check off, complete, or update task status
+alwaysApply: false
 ---
 
 # Task Completion
@@ -11,7 +12,7 @@ Marks tasks as complete in any markdown task list using checkbox + strikethrough
 ## Step 1: Locate the Task
 
 1. If the user specifies a file, use that file
-2. If the user references "this week" or a weekly priority, default to the most recent weekly update file (`MMMDDYYYY-MMMDDYYYY.md`) under `weekly-updates/` in the current half-year subfolder (e.g., `1h2026` for Jan–Jun 2026, `2h2025` for Jul–Dec 2025)
+2. If the user references "this week" or a weekly priority, default to the most recent weekly update file (`MMMDDYYYY-MMMDDYYYY.md`) under `weekly-updates/` in the current half-year subfolder (e.g., `1H2026` for Jan–Jun 2026, `2H2025` for Jul–Dec 2025)
 3. Otherwise, use the currently open/focused file in the IDE
 4. Search for the task text — tasks appear as `- [ ] [Task description]` in any checklist section
 5. **Partial matching for weekly files**: If the user says "mark X as done" and no exact match is found, search for tasks containing the keyword(s). For example, "mark QBR as done" should match `- [ ] QBR doc`. If multiple partial matches exist, ask the user which one.
@@ -37,8 +38,8 @@ After:  - [x] ~~QBR doc~~
 **Markdown in task text**: Strikethrough wraps the entire text including any formatting:
 
 ```markdown
-Before: - [ ] Review **Example Project** PRD
-After:  - [x] ~~Review **Example Project** PRD~~
+Before: - [ ] Review **Project Alpha** PRD
+After:  - [x] ~~Review **Project Alpha** PRD~~
 ```
 
 **Indented/nested tasks**: Preserve the exact indentation:

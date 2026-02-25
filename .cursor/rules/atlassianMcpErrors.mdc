@@ -4,13 +4,29 @@ alwaysApply: true
 
 # Atlassian/MCP Error Handling
 
-Handles ALL errors from Atlassian API and MCP tool calls by prompting the user to re-authenticate.
+Handles errors from Atlassian/MCP tool calls and MCP unavailability by directing to re-auth (when applicable) and CLI fallback.
 
-**TRIGGER**: When ANY error occurs from an Atlassian or MCP tool call — regardless of error type.
+**TRIGGER**: Activate when EITHER:
 
-**How to identify Atlassian/MCP errors**: The error occurs during a call to any tool prefixed with `AtlassianRemoteMCPServer-` (e.g., `getJiraIssue`, `searchJiraIssuesUsingJql`, `getConfluencePage`, `createConfluencePage`, etc.)
+1. **Error path**: ANY error occurs from an Atlassian or MCP tool call — regardless of error type.
+2. **MCP unavailable path**: A workflow requires Jira or Confluence data AND the Atlassian MCP server is NOT in the available MCP servers list.
 
-## Step 1: Display Re-Authentication Message (MANDATORY for ALL errors)
+**Workflows that require Atlassian data**: end-week, timeline-sync, jira-project, jira-health-check, onboarding, or any user request that implies Jira/Confluence operations (e.g., "sync timeline", "create a project", "update Jira", "publish to Confluence", fetching a Confluence page for data restoration).
+
+**How to detect each trigger:**
+- **MCP error**: The error occurs during a call to any tool prefixed with `AtlassianRemoteMCPServer-` (e.g., `getJiraIssue`, `searchJiraIssuesUsingJql`, `getConfluencePage`, `createConfluencePage`, etc.)
+- **MCP unavailable**: Check the list of available MCP servers in your context. If no Atlassian-related server (e.g., `AtlassianRemoteMCPServer`) is present, treat as MCP unavailable.
+
+**Proactive check (MANDATORY)**: Before executing any skill or task that requires Jira or Confluence, check if Atlassian MCP is available. If not, do NOT silently skip Atlassian operations — proceed directly to Step 3 (CLI fallback).
+
+**Quick Reference:**
+
+| Situation | Steps |
+|-----------|-------|
+| **Error from tool call** | 1 → 2 → 3 → 4 (re-auth, retry, CLI fallback, manual checklist) |
+| **MCP server not available** | Skip 1–2. Go directly to 3 → 4 (CLI fallback, then manual checklist) |
+
+## Step 1: Display Re-Authentication Message (Error path only — skip if MCP unavailable)
 
 For **ANY** error from an Atlassian/MCP tool — whether it's 401, 403, 404, 500, 429, timeout, or anything else — display this message exactly:
 
@@ -31,7 +47,7 @@ ONCE YOU'VE TOGGLED THE TOOL AND RE-AUTHENTICATED, TYPE "ready" OR "try again" A
 - **DO NOT** proceed with other operations until user confirms
 - After confirmation, retry the original operation **once**
 
-## Step 2: Handle Failure After Retry (max 1 retry via MCP)
+## Step 2: Handle Failure After Retry (Error path only — skip if MCP unavailable)
 
 If the operation **still fails** after the user re-authenticates and you retry once:
 
@@ -53,7 +69,7 @@ Before attempting any CLI fallback, resolve credentials in this order:
 
 ### Fallback chain (try in order)
 
-1. **`acli`** (Atlassian CLI) — check if available (`which acli`). If **not installed**: on macOS/Linux, install via `brew tap atlassian/homebrew-acli && brew install acli`. On Windows, skip `acli` and go directly to `curl`. Detect platform with `uname -s` or check for `brew` availability before attempting install. Tell the user: "Installing Atlassian CLI as a fallback..." — do not ask for permission, just install it. `acli` supports Jira and Confluence operations natively and uses the same API token auth.
+1. **`acli`** (Atlassian CLI) — check if available (`which acli`). If **not installed**: on macOS/Linux, install via `brew tap atlassian/homebrew-acli && brew install acli`. On Windows (no Homebrew), skip `acli` and go directly to `curl`. Detect platform with `uname -s` or check for `brew` availability before attempting install. Tell the user: "Installing Atlassian CLI as a fallback..." — do not ask for permission, just install it. `acli` supports Jira and Confluence operations natively and uses the same API token auth.
 2. **`curl` to Atlassian REST API** — if `acli` install fails or the specific `acli` command fails, fall back to raw `curl` calls. Always available, no install needed.
 3. **Manual checklist** — if both CLI methods fail or no credentials are available, proceed to Step 4
 
@@ -61,7 +77,7 @@ Before attempting any CLI fallback, resolve credentials in this order:
 
 All requests use: `curl -u {email}:{api_token} -H "Content-Type: application/json"`
 
-**Site**: Use the Atlassian Site value from `shared/config.md`
+**Site**: `{{ATLASSIAN_SITE}}`
 
 #### Jira (REST API v3)
 
@@ -74,7 +90,7 @@ All requests use: `curl -u {email}:{api_token} -H "Content-Type: application/jso
 | `getTransitionsForJiraIssue` | `GET` | `/rest/api/3/issue/{key}/transitions` |
 | `addCommentToJiraIssue` | `POST` | `/rest/api/3/issue/{key}/comment` |
 
-**Base URL**: `https://{ATLASSIAN_SITE}/rest/api/3` (resolve from `shared/config.md`)
+**Base URL**: `https://{{ATLASSIAN_SITE}}/rest/api/3`
 
 **Note on search**: The legacy `/rest/api/3/search` endpoint has been removed. Always use `/rest/api/3/search/jql`. JQL must be URL-encoded. Pagination uses `nextPageToken`, not `startAt`.
 
@@ -87,12 +103,12 @@ All requests use: `curl -u {email}:{api_token} -H "Content-Type: application/jso
 | `createConfluencePage` | `POST` | `/wiki/api/v2/pages` |
 | `getConfluencePageDescendants` | `GET` | `/wiki/api/v2/pages/{id}/children` |
 
-**Base URL**: `https://{ATLASSIAN_SITE}/wiki/api/v2` (resolve from `shared/config.md`)
+**Base URL**: `https://{{ATLASSIAN_SITE}}/wiki/api/v2`
 
 ### Rules
 
-- **Tell the user what's happening** — "MCP failed, trying via CLI..." (don't silently switch)
-- **Same operation, different transport** — the CLI fallback should attempt the exact same operation that the MCP call was trying to perform
+- **Tell the user what's happening** — "MCP failed, trying via CLI..." or "Atlassian MCP isn't available, trying via CLI..." (don't silently switch or skip)
+- **Intended operation** — When MCP was called and failed, attempt that exact operation via CLI. When MCP was never called (unavailable path), derive the intended operation from the skill steps or user request (e.g., "get issue PROJ-123", "fetch Confluence page 123456789").
 - **If CLI succeeds, continue normally** — no need for manual checklist for that operation
 - **If CLI also fails, proceed to Step 4** — capture the pending work
 
@@ -131,11 +147,18 @@ The following Jira/Confluence updates could not be applied automatically. Apply 
 
 ## Validation
 
-Before proceeding past any error, confirm:
+**Error path** — confirm:
 - [ ] ALL CAPS re-auth message displayed to user
 - [ ] Waited for user confirmation before retrying
 - [ ] Retried at most once after re-authentication
-- [ ] If retry failed: informed user, suggested manual troubleshooting, offered to skip
+- [ ] If retry failed: informed user, proceeded to CLI fallback
+
+**MCP unavailable path** — confirm:
+- [ ] Detected MCP unavailable before attempting calls
+- [ ] Informed user that Atlassian MCP is not available
+- [ ] Skipped Steps 1–2, proceeded directly to Step 3
+
+**Both paths** — confirm:
 - [ ] CLI fallback attempted before resorting to manual checklist (Step 3)
 - [ ] If write operation failed via both MCP and CLI: pending changes captured with target, operation, payload, and reason
 - [ ] Manual Follow-Up Checklist presented at end of workflow (not per-failure)

@@ -25,19 +25,19 @@
 ## Example Entry
 
 ```markdown
-## Example Project - Technical Walkthrough (EPTW)
+## Project Alpha - Technical Walkthrough (ALPHATW)
 
-**Confluence URL:** https://{{ATLASSIAN_SITE}}/wiki/spaces/ID/pages/123456789/Example+Project+Technical+Walkthrough
+**Confluence URL:** https://{{ATLASSIAN_SITE}}/wiki/spaces/TEAM/pages/123456789/Project+Alpha+Technical+Walkthrough
 
-**Jira Project Ticket:** [PRJ-1001 - Example Project - Technical Walkthrough (EPTW)](https://{{ATLASSIAN_SITE}}/browse/PRJ-1001)
+**Jira Project Ticket:** [PROJ-100 - Project Alpha - Technical Walkthrough (ALPHATW)](https://{{ATLASSIAN_SITE}}/browse/PROJ-100)
 
 **Completed:** Jan 15, 2026
 
-**Contributors:** [Contributor 1], [Contributor 2], [Contributor 3]
+**Contributors:** Engineer A, Engineer B, Engineer C
 
 **Jira Epic Tickets:**
-- [PRJ-1002 - Discovery](https://{{ATLASSIAN_SITE}}/browse/PRJ-1002) (Status: Done ✅)
-- [PRJ-1003 - Documentation](https://{{ATLASSIAN_SITE}}/browse/PRJ-1003) (Status: Done ✅)
+- [PROJ-101 - Discovery](https://{{ATLASSIAN_SITE}}/browse/PROJ-101) (Status: Done ✅)
+- [PROJ-102 - Documentation](https://{{ATLASSIAN_SITE}}/browse/PROJ-102) (Status: Done ✅)
 
 **Final Status Summary:**
 Technical walkthrough completed and presented to stakeholders. All documentation finalized and published to Confluence. Discovery phase findings incorporated into final recommendations.

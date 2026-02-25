@@ -27,6 +27,10 @@ START
   │       ├─ Yes → Full setup flow
   │       └─ No → Exit
   │
+  ├─ Step 0: Prerequisites (MANDATORY)
+  │   └─ Check git, curl; optionally brew (macOS). Offer install if missing. Summarize.
+  │       └─ Missing tools? → Show what's missing, offer to install, allow skip
+  │
   ├─ Step 1: Identity (MANDATORY)
   │   └─ Prompt for name, role, team, communication style
   │
@@ -52,6 +56,36 @@ START
 ```
 
 ## Workflow
+
+### Step 0: Prerequisites (MANDATORY)
+
+Check that required tools are available before proceeding. Detect the OS first (`uname -s`), then run checks.
+
+| Tool | Check | Required | Install if missing |
+|------|-------|----------|--------------------|
+| `git` | `git --version` | Yes | macOS: `xcode-select --install` (GUI prompt — tell user to complete it, then retry). Linux: `sudo apt-get install -y git` or `sudo dnf install -y git`. Windows/WSL: direct user to [git-scm.com](https://git-scm.com). |
+| `curl` | `curl --version` | Yes | macOS: included with system, `brew install curl` if somehow missing. Linux: `sudo apt-get install -y curl` or `sudo dnf install -y curl`. |
+| `brew` | `brew --version` | No (macOS only) | Offer: "Homebrew is recommended for installing optional tools later. Install it? (skip is fine)" If yes: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` |
+| Atlassian Plugin | Check `~/.cursor/extensions/` for `atlassian.atlascode-*` directory | No | Don't install — just detect and report. If not found, note it in the summary. If user says "yes" to Atlassian in Step 2, direct them to install the Atlassian extension in Cursor. |
+
+**Flow:**
+
+1. Run all checks silently first — collect results (including reading `mcp.json` for Atlassian config)
+2. Present a summary:
+   - `✅ git (2.x.x)` / `❌ git — not found`
+   - `✅ curl (8.x.x)` / `❌ curl — not found`
+   - `✅ brew (4.x.x)` / `⏭️ brew — not installed (optional)` (macOS only)
+   - `✅ Atlassian Plugin — installed (vX.X.X)` / `⏭️ Atlassian Plugin — not installed (needed for Jira/Confluence features)`
+3. If anything required is missing, ask: **"I can try to install the missing tools. Continue with install, or skip and install them yourself?"**
+   - **Install** → attempt install, re-check, report result
+   - **Skip** → continue setup with a warning: "Some features may not work without [tool]. You can install it later and re-run setup."
+4. If everything is present → proceed silently to Step 1 (don't ask for confirmation)
+
+**Rules:**
+- **Never block setup on prerequisites.** Missing tools are a warning, not a wall. Setup must always be completable.
+- **Always confirm before installing.** Never auto-install without asking. `xcode-select --install` opens a GUI dialog — warn the user it will pop up.
+- **Skip brew check on non-macOS.** Only check for Homebrew on Darwin systems.
+- **Keep it fast.** Don't install brew proactively if git and curl are present — only offer if something is missing or as a quick mention at the end of the summary.
 
 ### Step 1: Identity (MANDATORY)
 
@@ -109,8 +143,8 @@ I found the following from your Jira/Confluence instance:
 - [etc.]
 
 **Custom Fields:**
-- Target Start: customfield_11227
-- Target End: customfield_11228
+- Target Start: customfield_XXXXX
+- Target End: customfield_XXXXX
 
 **Confluence:**
 - Space: "Engineering" (ID: 1234567)
@@ -132,9 +166,17 @@ For any values that auto-discovery didn't resolve, ask the user — but only for
 
 **Don't ask for:** Cloud ID, issue type IDs, or space IDs if MCP couldn't find them — these are too obscure for most users. Leave as placeholders and note them in the summary.
 
-#### 2d: If MCP is not available at all
+#### 2d: If the Atlassian Plugin is not installed
 
-If no MCP tools are available (not configured, not enabled), fall back to a minimal manual flow:
+If Step 0 detected no Atlassian Plugin (`atlassian.atlascode-*` not in `~/.cursor/extensions/`), guide the user:
+
+**"The Atlassian Plugin isn't installed. To enable auto-discovery and Jira/Confluence features:**
+1. **Open Cursor's Extensions panel** (Cmd+Shift+X / Ctrl+Shift+X)
+2. **Search for "Atlassian"** and install the official Atlassian extension (Atlascode)
+3. **Authenticate** — follow the plugin's sign-in flow to connect to your Atlassian site
+4. **Re-run setup** — say "set me up" again to auto-detect your Jira/Confluence settings"
+
+Then fall back to a minimal manual flow:
 
 | Value | Prompt | Fallback |
 |-------|--------|----------|
@@ -170,7 +212,6 @@ Create these files/folders only if they don't already exist:
 | `weekly-updates/` | Directory |
 | `notes/` | Directory |
 | `project-ideas/` | Directory |
-| `performance-reviews/` | Directory |
 | `IMPROVEMENTS.md` | Only if missing — use the standard template |
 
 #### Starter file templates
@@ -247,6 +288,7 @@ Present a clear summary of what was configured:
 
 ## Critical Rules
 
+- **Prerequisites check runs first.** Always check tools before collecting identity. But never let missing tools block setup entirely.
 - **Never skip the identity step.** Name and role are required.
 - **Atlassian is always optional.** Never make the user feel like Jira/Confluence is required. Core workflows work without it.
 - **MCP-first for Atlassian config.** If MCP is available, always attempt auto-discovery before asking the user for field IDs. Most EMs won't know their custom field IDs or issue type IDs — infer them.
@@ -260,6 +302,7 @@ Present a clear summary of what was configured:
 ## Validation
 
 After setup, confirm:
+- [ ] Prerequisites checked (git, curl present or user chose to skip)
 - [ ] SOUL.md has user's name and role (no `{{USER_NAME}}` remaining)
 - [ ] shared/config.md has at minimum: team name populated
 - [ ] If Atlassian configured: site URL and project key are populated

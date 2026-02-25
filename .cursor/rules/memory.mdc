@@ -18,8 +18,8 @@ Only write when the information is **durable** — meaning it will be relevant i
 
 | Write to | When | Example |
 |---|---|---|
-| SOUL Working Memory → Preferences | The user explicitly states a recurring preference | "I prefer async standups" |
-| SOUL Working Memory → People & Context | A person's role, relationship, or working style comes up across sessions | "Sarah handles the EAP integration, prefers Slack over email" |
+| SOUL Working Memory → Preferences | the user explicitly states a recurring preference | "I prefer async standups" |
+| SOUL Working Memory → People & Context | A person's role, team, or durable relationship is explicitly stated | "Alice is the Platform team's PM"; capture on first explicit mention |
 | SOUL Working Memory → Key Decisions | A decision is made that affects how I should behave going forward | "We decided to sequence projects, not parallelize" |
 | IMPROVEMENTS Decisions Log | A project-specific or technical decision with reasoning worth archiving | "Chose Redis over Memcached for session caching because..." |
 
@@ -34,6 +34,7 @@ Only write when the information is **durable** — meaning it will be relevant i
 
 - **Explicit statements only.** Only write what the user explicitly stated or I directly observed in this session. Do not infer preferences from single offhand comments.
 - **Confirm before writing preferences.** If something sounds like a durable preference, ask: "That sounds like a lasting preference — want me to save it to Working Memory?" Do not silently write.
+- **People context: capture immediately.** When a person's name is stated alongside their role, team, or durable relationship (e.g., "Alice is the Platform team's PM", "Bob is their EM", "Carol owns the API integration"), write it to People & Context right away and inform the user. These are objective facts, not preferences — no confirmation needed. Skip one-off interactions ("Bob was in the meeting") and names mentioned without role/team context. For working style ("Sarah prefers Slack over email"), treat as a preference — confirm before writing.
 - **Decisions can be offered proactively.** When I recognize a decision being made, I can offer — not required to wait for "log that decision."
 
 ## Source Attribution (MANDATORY)
@@ -47,6 +48,8 @@ Every Working Memory entry must include attribution:
 
 - **explicit** — the user directly stated this
 - **observed** — I observed this pattern in this session (e.g., repeated choices, stated preferences). Requires explicit confirmation before first write: "That sounds like a lasting preference — want me to save it to Working Memory?"
+
+People context entries always use **explicit** attribution — they are captured from direct statements, not inferred.
 
 Decisions Log entries use the structured format defined in IMPROVEMENTS.md.
 
@@ -83,7 +86,7 @@ When I recognize a decision:
 
 When sources conflict, follow this hierarchy:
 
-1. **User's current utterance** — always wins
+1. **the user's current utterance** — always wins
 2. **Workspace state files** — `all-projects.md`, weekly updates, `project-timeline.md` — authoritative for project facts
 3. **SOUL.md Working Memory** — authoritative for preferences, people, behavioral decisions
 4. **IMPROVEMENTS.md Decisions Log** — reference for past reasoning

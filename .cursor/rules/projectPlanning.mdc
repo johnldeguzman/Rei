@@ -16,4 +16,4 @@ Enforces minimum duration and single-project sequencing when planning, schedulin
 
 3. **Flag violations** — if Jira data shows a project with < 1 month between start and end dates, or if two projects overlap, flag it to the user as a planning concern.
 
-4. **Jira fields** — use `Target start` and `Target end` field IDs as defined in `shared/config.md` when reading or writing project dates in Jira.
+4. **Jira fields** — use `Target start` and `Target end` as defined in `shared/config.md` (configured in `shared/config.md`) when reading or writing project dates in Jira.
