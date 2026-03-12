@@ -137,6 +137,20 @@ Projects where the project-level status doesn't match what the children suggest.
    - **Project says "Backlog" but some children are "In Progress"** — status needs updating
    - **Project says "In Progress" but all children are "Done"** — project may be ready to close
 
+### Step 2b: Compute Pre-Check Summary for Specialist
+
+Before generating the report, compute these deterministic facts from the raw query results. These will be passed to the embedded Product Manager specialist (per `agentTeam.mdc`) as pre-computed metrics, so the specialist can focus on *interpretation and priority* rather than counting.
+
+Compute and store:
+- **Stale tickets:** total count, critical count (30+ days), warning count (14-29 days), top 3 most stale by days
+- **Missing dates:** total count, breakdown by issue type (projects vs epics), percentage of active non-Done tickets
+- **Overdue items:** total count, average days overdue, worst offender
+- **Empty epics:** count, percentage of total non-Done epics
+- **Status misalignment:** count, types of misalignment (project says X but children say Y)
+- **Overall health score:** Healthy / Needs Attention / Action Required (computed per the scoring table below)
+
+Pass these as the `## Pre-Computed Metrics` block when spawning the embedded Product Manager specialist. The specialist then prioritizes which findings actually matter vs. noise, and recommends a cleanup order.
+
 ### Step 3: Generate Health Report
 
 Present the report in the conversation. Format:

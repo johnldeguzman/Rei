@@ -116,6 +116,9 @@ You are a {specialist_type} specialist embedded in a {skill_name} workflow.
 ## Context
 {relevant data from the skill — e.g., weekly progress, timeline, Jira results}
 
+## Pre-Computed Metrics
+{deterministic facts extracted from the context data — e.g., "12/15 tickets missing story points", "3 projects slipped this week". Omit if no quantifiable data.}
+
 ## Tool Access — Verify, Don't Guess
 You have full tool access: read files, run shell commands (read-only), search the codebase. You also have **GitHub CLI access** (`gh`) with `repo` scope across the org — use it to verify against actual source code, not just the local workspace. Your profile includes a "Verification" section — use it. When making a claim about the state of something, check it first.
 
@@ -360,18 +363,23 @@ Agents communicate indirectly: each writes structured findings to their designat
 
 ## Model Configuration
 
-Each specialist runs on a designated model. Read the **Model** field from the specialist's profile (`specialists/{type}.md`) and pass it when spawning the agent via the Task tool's `model` parameter.
+Model selection depends on **how** the specialist is being used, not which specialist it is. Specialist profiles contain all domain knowledge (checklists, domain context, verification steps) — the model applies that knowledge.
 
-| Specialist | Model | Rationale |
+### By mode
+
+| Mode | Model | Rationale |
 |---|---|---|
-| Engineering | `claude-4.6-opus-high` | Deep technical reasoning, architecture analysis |
-| Security | `claude-4.6-opus-high` | Thorough threat modeling, compliance review |
-| EM | `claude-4.6-opus-high` | Nuanced organizational and people assessment |
-| AI | `codex` | Prompt engineering, directive analysis |
-| Product Manager | `codex` | Product strategy, scope and delivery review |
-| Ops | `codex` | Operational readiness, deployment assessment |
+| **Embedded** (in a skill with pre-computed metrics — jira-health-check, timeline-sync, weekly update) | `fast` | Pre-computed metrics do the heavy lifting (Step 2b). The specialist interprets numbers and recommends actions — a structured task. |
+| **Full team review** (PRD, architecture doc, RFC, launch readiness) | default (high) | Reasoning from raw material about scope, trade-offs, security implications, and cross-domain interactions. |
+| **Synthesis** (cross-specialist resolution and final synthesis) | default (high) | Cross-specialist reasoning, conflict resolution, priority ranking. |
+| **Single specialist — structured content** (rule/skill review, code review) | `fast` | Applying a known checklist to well-structured input. |
+| **Single specialist — open-ended content** (ad-hoc analysis, ambiguous scope) | default (high) | Needs reasoning about trade-offs without a pre-defined checklist. |
 
-When spawning specialist agents, always set the `model` parameter to match this table. The model is also declared in each specialist's profile as the source of truth — if the profile and this table ever conflict, the profile wins.
+### Quick decision rule
+
+**If the specialist has pre-computed metrics or is applying a checklist to structured data → `fast`.** If the specialist is reasoning from raw, ambiguous material → default (high).
+
+When spawning specialist agents, set the `model` parameter based on the mode, not the specialist type. The specialist's profile declares `**Model:** context-dependent` — this table is the source of truth for which context gets which model.
 
 ### Subagent Type Routing
 
@@ -422,7 +430,51 @@ Default to all specialists if unsure. For purely technical docs with no user-fac
    - **Tactical** concepts (refactors, config changes, flag toggles) can use tactical questions directly.
    - If the source proposes a new design but the questions only ask about tweaking existing mechanisms, rewrite the questions.
 4. Determine which specialists are relevant (see Specialist Selection table)
-5. Tell the user which specialists are being activated and why
+5. **Pre-compute metrics** (see Step 0b below) — if the source material contains quantifiable data, extract key metrics before sending to specialists
+6. Tell the user which specialists are being activated and why
+
+### Step 0b: Pre-Compute Metrics (When Applicable)
+
+For content types that contain quantifiable data, compute deterministic metrics before passing to specialists. This ensures specialists argue about *interpretation and priority*, not about *what the numbers say*.
+
+**When to pre-compute:** If the source material or the context around it includes structured data (timelines, ticket counts, resource allocations, status distributions, health metrics), extract the key numbers.
+
+**How:**
+1. Read the relevant data sources (Jira query results, project files, timeline data, health check output)
+2. Compute summary statistics — totals, distributions, ratios, thresholds exceeded
+3. Add a `## Pre-Computed Metrics` section to the specialist prompt (between the source material and the task instructions)
+
+**Pre-computed metrics prompt block:**
+
+```
+## Pre-Computed Metrics
+
+These are deterministic facts extracted from the source data. Reference them in your analysis — don't re-derive them.
+
+{metrics content — e.g.:}
+- Total projects: 8 (4 active, 2 planned, 2 backlog)
+- Tickets missing dates: 12/47 (25%) — 3 projects, 9 epics
+- Overdue items: 5 (oldest: 23 days past due)
+- Resource allocation: 3 devs at >90% utilization, 1 dev at 45%
+- Timeline span: 8 months, 4 milestones, 2 with no end date
+- Status misalignment: 2 projects show "In Progress" but all children are "Backlog"
+```
+
+**What to compute per content type:**
+
+| Content Type | Metrics to Extract |
+|---|---|
+| Jira health check results | Ticket counts by check (stale, missing dates, overdue, empty epics, misaligned), severity distribution, days-overdue histogram |
+| Project timeline | Total duration, milestone count, milestones without dates, resource count, dependency depth, projects by status |
+| Weekly update / end-week | Tasks completed vs planned, projects that slipped, blockers count, carryover items |
+| PRD / feature spec | Feature count, integration points, external dependencies count, scope items without acceptance criteria |
+| Architecture doc | Components count, external systems touched, new infrastructure required, migration steps |
+
+**Rules:**
+- Only pre-compute what the data supports — don't fabricate metrics for qualitative content
+- Keep it to 5-10 bullet points — this is a summary, not a report
+- Use the same metrics for all specialists in a given review — consistency matters
+- For full team reviews, include the metrics in every specialist's prompt. For embedded mode, include in the embedded specialist's prompt.
 
 ### Step 1: Round 1 — Independent Analysis (Non-Blocking, Parallel)
 
@@ -445,6 +497,9 @@ You are a {specialist_type} specialist conducting a review.
 
 ## Source Material to Review
 {full content of .agent-team/input.md}
+
+## Pre-Computed Metrics
+{metrics from Step 0b, or omit this section if no quantifiable data was available}
 
 ## Tool Access — Verify, Don't Guess
 You have full tool access: read files, run shell commands (read-only), search the codebase, and browse the workspace. USE THEM.
@@ -473,7 +528,7 @@ Use this exact format:
 {template from templates.md — Specialist Findings Format section}
 ```
 
-**Use `subagent_type: "generalPurpose"` for each specialist agent.** Do NOT use "explore" — specialists need full write access and tool access for verification. **Set the `model` parameter per the Model Configuration table** (e.g., `model: "claude-4.6-opus-high"` for Engineering, `model: "codex"` for AI).
+**Use `subagent_type: "generalPurpose"` for each specialist agent.** Do NOT use "explore" — specialists need full write access and tool access for verification. **Set the `model` parameter per the Model Configuration table** — full team reviews use the default (high) model; embedded specialists use `fast`.
 
 ### Step 2: Resolution Loop — Cross-Specialist Conversation
 
