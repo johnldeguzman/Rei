@@ -125,14 +125,18 @@ Once you have the site URL and project key, attempt to discover the remaining co
 |-----------------|----------|---------------|
 | **Issue type IDs** | `searchJiraIssuesUsingJql` with JQL: `project = {KEY} ORDER BY created DESC` (maxResults=1), then inspect the returned issue's `issuetype` field. Also try: `getJiraIssue` on a known ticket to see available fields. | Map issue type names (Epic, Task, etc.) to their IDs from the response schema. |
 | **Custom field IDs** (Target Start/End) | `getJiraIssue` on any ticket in the project — request all fields. Look for fields with names containing "Target start", "Target end", or "Start date", "End date". | Custom fields appear as `customfield_NNNNN` in the response. Match by display name. |
-| **Confluence spaces** | `searchConfluencePages` or `getConfluenceSpacesByName` — search for spaces the user has access to. | Present the list and ask the user to pick their team's space. |
-| **Confluence pages** | Once space is identified, search for pages named "All Projects", "Done Projects", "Project Timeline" **scoped to that space** (e.g., CQL: `title = "All Projects" AND space = "KEY"`). Do NOT run unscoped title searches across the instance. | Match by page title within the selected space. If found, validate ownership before auto-filling (see ownership guard below). If no matches, offer to create new pages. |
+| **Confluence spaces** | `getConfluenceSpaces` — list spaces the user has access to. | Present the list and ask the user to pick their team's space. |
+| **Confluence pages** | Use `getPagesInConfluenceSpace` with the selected space ID and a `title` filter (e.g., title="All Projects"). Do NOT run unscoped title searches across the instance. | Match by page title within the selected space. Before auto-filling: validate ownership for personal spaces (MANDATORY — see guard below). If no matches, offer to create new pages. |
 | **Cloud ID** | Often available from MCP connection metadata or from any successful API response headers. | Extract if available, otherwise leave as placeholder. |
 
 **Important rules for auto-discovery:**
 - **Never silently fail.** If a discovery call fails (auth error, timeout, 404), note what couldn't be discovered and move on — don't block setup.
 - **Don't trigger the re-auth flow.** If MCP auth fails during setup, just say: "Couldn't connect to Atlassian — I'll leave those fields as placeholders. You can fill them later or run setup again."
-- **Validate Confluence page ownership (MANDATORY).** After discovering Confluence pages, check the space type and owner. Use `getConfluenceSpaces` to fetch space metadata for any matched pages. If a page lives in a **personal space** (type: `personal`), compare the `spaceOwnerId` against the current user's account ID (from `atlassianUserInfo`). If the owner doesn't match, **do not auto-fill** — instead warn: "Found pages matching 'All Projects' / 'Project Timeline', but they belong to another user's personal space ([owner name]). These are likely someone else's Rei pages. I'll leave Confluence page IDs as placeholders — you can create your own pages or provide IDs manually." This prevents new users from accidentally inheriting another user's tracking pages.
+- **Validate Confluence page ownership (MANDATORY).** Before auto-filling any discovered Confluence page IDs:
+  1. Call `getConfluenceSpaces` with the page's `spaceId` to get space metadata (type, owner).
+  2. If space type is `personal`: compare `spaceOwnerId` to the current user's `accountId` (from `atlassianUserInfo`).
+  3. If the owner **does not match** (or the check cannot be performed — missing fields, API error): **do not auto-fill**. Warn: "Found pages matching 'All Projects' / 'Project Timeline', but they belong to another user's personal space ([owner name]). These are likely someone else's Rei pages. I'll leave Confluence page IDs as placeholders — you can create your own pages or provide IDs manually."
+  4. If the space is `global` or the owner matches: proceed with auto-fill normally.
 - **Always confirm with the user.** After discovery, show what was found and ask: "Does this look right?" before writing to config. Example:
 
 ```
