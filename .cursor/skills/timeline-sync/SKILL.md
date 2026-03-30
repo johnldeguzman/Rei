@@ -116,6 +116,21 @@ Before regenerating `project-timeline.md`:
 
 **Collect ALL data before generating any output.**
 
+### Step 2b: Compute Pre-Check Summary for Specialist
+
+Before building the views, compute deterministic facts from the fetched Jira data. These will be passed to the embedded Product Manager specialist (per `agentTeam.mdc`) as pre-computed metrics, so the specialist can focus on *schedule conflicts, unrealistic durations, and missing buffers* rather than counting.
+
+Compute and store:
+- **Project counts:** total non-Done, active, planned, backlog
+- **Tickets with missing dates:** count and list (key + summary), broken down by: missing both start and end, missing only end
+- **Fetch failures:** count and which tickets could not be retrieved
+- **Date range:** earliest project start → latest project end, total span in months
+- **Active project summary:** for each active project: milestone count, epic count, % of epics with dates, % of epics Done
+- **Scheduling gaps:** any project where end date is before today (overdue), any project with 0 epics
+- **Changes since last sync:** which projects/epics had date or status changes (from Step 0 comparison)
+
+Pass these as the `## Pre-Computed Metrics` block when spawning the embedded Product Manager specialist. The specialist then analyzes timeline conflicts, unrealistic durations, and recommends adjustments based on verified facts.
+
 ### Step 3a: Build View 3 — Visual Roadmap Table (MANDATORY for Confluence)
 
 Generate a month-column table with `██` block indicators for each project's active months. This is the primary visual on the Confluence page and **MUST always be included** when syncing to Confluence.

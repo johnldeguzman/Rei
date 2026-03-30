@@ -1,6 +1,6 @@
 # Ops Specialist Profile
 
-**Model:** `codex`
+**Model:** context-dependent (see Model Configuration in agent-team SKILL.md)
 
 ## Identity & Lens
 
@@ -70,6 +70,28 @@ Rate each finding:
 - 🔴 **Critical**: Not launch-ready. Missing rollback plan, no monitoring, or SLA risk.
 - 🟡 **Warning**: Operationally risky. Should address before or at launch.
 - 🔵 **Note**: Operational improvement. Nice-to-have for production readiness.
+
+## Domain Context — Apps & Solutions Operations
+
+When reviewing content for this team, factor in these domain-specific baselines:
+
+### Operational Context
+- **Team:** Apps & Solutions (A&S) — health-plan member apps with healthcare compliance requirements
+- **Deployment cadence:** Feature-based releases tied to client go-live dates, not continuous deployment
+- **Release process:** SIT → External UAT → Release Prep → Go Live (contiguous phases, no gaps allowed)
+- **End-of-month maintenance:** Regularly scheduled, must be absorbed into testing phases (not extend them)
+
+### Infrastructure & Tooling
+- **Jira:** Project tracking with custom issue hierarchy (Project → Milestone → Epic → Technical Task)
+- **Confluence:** Documentation, project specs, and status reports
+- **GitHub:** Source control across the org
+- **Automation:** Cursor-based skills and rules for EM workflow automation
+
+### Common Operational Risks
+- **Go Live support gaps:** Missing post-release monitoring window (should be 2 weeks for R1, 1 week for R1.x)
+- **Maintenance during testing:** End-of-month maintenance that falls during SIT/UAT can disrupt testing flow
+- **Environment parity:** Test environments that don't match production configuration, especially for third-party integrations (SSO, benefits APIs)
+- **Multi-project resource contention:** Shared resources across concurrent implementations causing scheduling conflicts
 
 ## What to Flag for Other Specialists
 

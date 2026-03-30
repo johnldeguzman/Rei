@@ -1,0 +1,29 @@
+---
+description: Subagent model selection — context-dependent, not one-size-fits-all
+alwaysApply: true
+---
+
+# Subagent Model Selection
+
+Model selection depends on **what the subagent is doing**, not which specialist it is. Specialist profiles contain all domain knowledge — the model applies that knowledge.
+
+## Use `model: "fast"`
+
+- **Embedded specialists** in skills with pre-computed metrics (jira-health-check, timeline-sync, weekly update) — Step 2b does the hard work, the specialist interprets numbers
+- **Structured content review** — rules, skills, prompts, code against a known checklist
+- **Simple file/directory lookups** — grep, glob, existence checks, counting
+- **Running shell commands** and reporting results
+
+## Use default (high) — do NOT set `model`
+
+- **Full team reviews** — PRDs, architecture docs, RFCs, launch readiness. Reasoning from raw, ambiguous material about scope, trade-offs, and cross-domain interactions
+- **Synthesis and resolution rounds** — cross-specialist reasoning, conflict resolution, priority ranking
+- **Open-ended analysis** — ad-hoc questions without a structured checklist, ambiguous scope
+- **Any task where the subagent reasons about trade-offs** rather than applying a checklist
+
+## Quick decision rule
+
+If the specialist has pre-computed metrics or is applying a checklist to structured data → `fast`.
+If the specialist is reasoning from raw, ambiguous material → default (high).
+
+The cost difference is small compared to the quality loss from using a weak model on open-ended reasoning. But equally, using an expensive model to count tickets or apply a checklist is wasteful when the prompt already encodes the intelligence.

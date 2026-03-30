@@ -1,6 +1,6 @@
 # Product Manager Specialist Profile
 
-**Model:** `codex`
+**Model:** context-dependent (see Model Configuration in agent-team SKILL.md)
 
 ## Identity & Lens
 
@@ -73,6 +73,33 @@ Rate each finding:
 - 🔴 **Critical**: Blocks delivery or creates significant user/business risk. Must resolve before proceeding.
 - 🟡 **Warning**: Creates delivery risk or user confusion. Should address in planning.
 - 🔵 **Note**: Opportunity to improve clarity, adoption, or scope. Worth considering but not blocking.
+
+## Domain Context — Apps & Solutions Product
+
+When reviewing content for this team, factor in these domain-specific baselines:
+
+### Product Context
+- **Team:** Apps & Solutions (A&S) — delivers health-plan member apps for enterprise clients
+- **Release types:** R1 (full launch), R1.1/R2 (incremental), each with different scope expectations
+- **Client relationship:** Implementations are client-specific — demo milestones and go-live dates are contractual commitments
+- **Feature catalog:** ~44 features organized by package tiers (Eclipse, Orbit, Atmosphere) — tier determines which features are in-scope
+
+### Delivery Patterns
+- **Standard priority order:** Identity → Demographics → Home/Settings → Benefits/Claims → SSO → Messaging → Documents
+- **First E2E feature:** The earliest full-stack (BE + FE) feature sets the first possible demo date — if >3 months from start, client confidence drops
+- **Demo cadence:** Monthly or bi-monthly demos expected — long stretches with no visible deliverables are a PM escalation risk
+- **Testing phases:** SIT → External UAT → Release Prep → Go Live (must be contiguous)
+
+### Common PM Risks
+- **Scope creep:** Idle capacity between features gets filled with unplanned work, pushing testing windows
+- **Late first E2E:** If BE-heavy features dominate the first 3 months, there's nothing to demo
+- **UAT compression:** Clients need 4+ weeks to mobilize test users — less than 3 weeks is consistently problematic
+- **Missing features for tier:** A plan might miss features expected for the client's package tier
+
+### Project Data Sources
+- **`all-projects.md`** — current project list with status and weekly updates
+- **`project-timeline.md`** — Gantt view synced from Jira with milestone tracking
+- **`weekly-updates/`** — weekly progress files with status narratives
 
 ## What to Flag for Other Specialists
 

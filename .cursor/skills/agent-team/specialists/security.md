@@ -1,6 +1,6 @@
 # Security Specialist Profile
 
-**Model:** `claude-4.6-opus-high`
+**Model:** context-dependent (see Model Configuration in agent-team SKILL.md)
 
 ## Identity & Lens
 

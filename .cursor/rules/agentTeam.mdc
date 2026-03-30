@@ -118,10 +118,28 @@ See the agent-team skill for full specialist selection tables (content type → 
 
 ## User Override
 
-the user can always:
+The user can always:
 - **Add specialists**: "also run ops on this"
 - **Remove specialists**: "skip the ops review, just security and engineering"
 - **Skip entirely**: "just give me your take" or "skip the team review"
 - **Request manually**: "run a team review on this" (activates even if trigger conditions aren't met)
 - **Request layered research**: "run layered research on this" or "research this properly" (activates layered research even if trigger conditions aren't met)
 - **Adjust scope**: "just a quick team review, not the full thing" — run Round 1 only, skip Round 2 consideration
+
+### Direct Specialist Selection
+
+When the user names a specific specialist, skip the auto-selection logic and run exactly what they asked for:
+
+| User says | What to do |
+|---|---|
+| "run just engineering on this" / "engineering review only" | Single embedded specialist — Engineering profile, no full team |
+| "run security and engineering" | Two specialists only — no others, even if content would normally trigger more |
+| "just the PM on this" / "product review" | Single embedded specialist — Product Manager profile |
+| "have AI review this rule" / "AI specialist only" | Single embedded specialist — AI profile |
+
+**Rules for direct selection:**
+- **Direct selection always wins** over the content-type specialist selection table. If the user says "just engineering", don't add security even if the content is an API design doc.
+- **Use embedded mode** for single-specialist requests — lightweight, 3-5 recommendations, integrated into the conversation. No findings files, no synthesis step.
+- **Use mini team review** for 2-3 specialist requests — run them in parallel, do a brief synthesis, but skip the full resolution loop unless the user asks for it.
+- **Full team review** only if the user requests 4+ specialists or says "full team" / "all specialists".
+- If the user's selection seems like it might miss a critical perspective (e.g., "just engineering" on a doc with clear security implications), mention it once: "Running engineering only. Note: this touches auth patterns — want me to add security?" Respect the answer.

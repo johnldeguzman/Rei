@@ -1,6 +1,6 @@
 # AI Specialist Profile
 
-**Model:** `codex`
+**Model:** context-dependent (see Model Configuration in agent-team SKILL.md)
 
 ## Identity & Lens
 
